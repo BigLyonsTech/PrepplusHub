@@ -11,7 +11,10 @@ import { loginUser } from '@/store/slices/authSlice'
 function routeForUser(user) {
   if (!user) return '/role-confirmation'
   if (user.role === 'admin') return '/admin'
-  if (user.role === 'vendor') return '/vendor/dashboard'
+  if (user.role === 'vendor') {
+    if (!user.vendorVerificationStatus) return '/onboarding/vendor'
+    return '/vendor/dashboard'
+  }
   if (user.role === 'customer') {
     if (user.onboardingStage === 'personalizing') return '/onboarding/quiz'
     return '/customer/dashboard'

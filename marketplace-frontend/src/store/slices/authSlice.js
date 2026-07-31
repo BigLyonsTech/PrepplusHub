@@ -42,8 +42,11 @@ export const fetchMe = createAsyncThunk('auth/me', async (_, { rejectWithValue }
     if (!getToken()) throw new Error('No session')
     return await api.me()
   } catch (e) {
-    clearToken()
-    return rejectWithValue(e.message)
+    // Only treat this as "logged out" when the server actually rejected the
+    // token (401/403). A network blip or a cold-starting backend shouldn't
+    // silently sign the user out from under them.
+    if (e.status === 401 || e.status === 403) clearToken()
+    return rejectWithValue({ message: e.message, status: e.status })
   }
 })
 
@@ -168,10 +171,13 @@ const authSlice = createSlice({
         state.user = action.payload
         state.isAuthenticated = true
       })
-      .addCase(fetchMe.rejected, (state) => {
-        state.user = null
-        state.isAuthenticated = false
-        state.token = null
+      .addCase(fetchMe.rejected, (state, action) => {
+        const status = action.payload?.status
+        if (status === 401 || status === 403) {
+          state.user = null
+          state.isAuthenticated = false
+          state.token = null
+        }
       })
 
       .addCase(confirmRole.fulfilled, (state, action) => {
