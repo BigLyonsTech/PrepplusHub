@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: prepplushub-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DATABASE
+        value: prepplushub_marketplace
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION_MS
+        value: "86400000"
+      - key: APP_CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: APP_OTP_EXPOSE_IN_RESPONSE
+        value: "true"
+      - key: APP_SEED_ENABLED
+        value: "true"
