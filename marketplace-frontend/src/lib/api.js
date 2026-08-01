@@ -71,6 +71,7 @@ export const api = {
   getProduct: (id) => request(`/products/${id}`),
   getVendorProducts: (vendorId) => request(`/products/vendor/${vendorId}`),
   createProduct: (body) => request('/products', { method: 'POST', body: JSON.stringify(body) }),
+  updateProduct: (id, body) => request(`/products/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
 
   // Cart
   getCart: () => request('/cart'),

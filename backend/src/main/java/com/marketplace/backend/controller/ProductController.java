@@ -38,4 +38,9 @@ public class ProductController {
     public Product create(@Valid @RequestBody ProductRequest request) {
         return productService.create(SecurityUtils.requireUserId(), request);
     }
+
+    @PutMapping("/{id}")
+    public Product update(@PathVariable String id, @Valid @RequestBody ProductRequest request) {
+        return productService.update(SecurityUtils.requireUserId(), id, request);
+    }
 }

@@ -36,6 +36,17 @@ export const createProduct = createAsyncThunk('catalog/createProduct', async (bo
   }
 })
 
+export const updateProduct = createAsyncThunk(
+  'catalog/updateProduct',
+  async ({ id, body }, { rejectWithValue }) => {
+    try {
+      return await api.updateProduct(id, body)
+    } catch (e) {
+      return rejectWithValue(e.message)
+    }
+  },
+)
+
 export const fetchCart = createAsyncThunk('catalog/fetchCart', async (_, { rejectWithValue }) => {
   try {
     return await api.getCart()
@@ -188,6 +199,14 @@ const catalogSlice = createSlice({
       .addCase(createProduct.fulfilled, (state, action) => {
         state.vendorProducts = [action.payload, ...state.vendorProducts]
         state.products = [action.payload, ...state.products]
+      })
+      .addCase(updateProduct.fulfilled, (state, action) => {
+        const replaceIn = (list) => {
+          const idx = list.findIndex((p) => p.id === action.payload.id)
+          if (idx >= 0) list[idx] = action.payload
+        }
+        replaceIn(state.vendorProducts)
+        replaceIn(state.products)
       })
       .addCase(fetchCart.fulfilled, (state, action) => {
         state.cart = action.payload || []

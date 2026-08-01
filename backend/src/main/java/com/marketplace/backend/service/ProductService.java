@@ -73,4 +73,19 @@ public class ProductService {
         activityService.log(vendorUserId, "product_listed", java.util.Map.of("productId", saved.getId()));
         return saved;
     }
+
+    public Product update(String vendorUserId, String productId, ProductRequest request) {
+        Product p = productRepository.findById(productId)
+                .orElseThrow(() -> new ApiException("Product not found", HttpStatus.NOT_FOUND));
+        if (!vendorUserId.equals(p.getVendorId())) {
+            throw new ApiException("You can only edit your own products", HttpStatus.FORBIDDEN);
+        }
+        p.setName(request.getName());
+        p.setPrice(request.getPrice());
+        p.setOriginalPrice(request.getOriginalPrice());
+        p.setCategory(request.getCategory());
+        p.setDescription(request.getDescription());
+        p.setImage(request.getImage());
+        return productRepository.save(p);
+    }
 }
