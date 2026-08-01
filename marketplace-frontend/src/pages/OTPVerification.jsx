@@ -7,6 +7,7 @@ import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
 import { verifyOtp } from '@/store/slices/authSlice'
 import { api } from '@/lib/api'
+import { routeForUser } from '@/lib/routing'
 
 export default function OTPVerification() {
   const dispatch = useDispatch()
@@ -48,7 +49,7 @@ export default function OTPVerification() {
     setError('')
     const result = await dispatch(verifyOtp({ email: pendingEmail, code }))
     if (verifyOtp.fulfilled.match(result)) {
-      navigate('/role-confirmation')
+      navigate(routeForUser(result.payload.user))
     }
   }
 

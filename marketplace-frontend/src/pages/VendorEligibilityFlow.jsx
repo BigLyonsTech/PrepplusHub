@@ -18,15 +18,17 @@ export default function VendorEligibilityFlow() {
   const user = useSelector((s) => s.auth.user)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const existing = user?.vendorEligibility
   const [form, setForm] = useState({
-    businessName: '',
-    businessCategory: categories[0],
-    expectedProductRange: ranges[0],
+    businessName: existing?.businessName || '',
+    businessCategory: existing?.businessCategory || categories[0],
+    expectedProductRange: existing?.expectedProductRange || ranges[0],
     idDoc: null,
     businessDoc: null,
   })
 
   const alreadyPending = user?.vendorVerificationStatus === 'pending' || user?.vendorVerificationStatus === 'verified'
+  const rejected = user?.vendorVerificationStatus === 'rejected'
 
   function update(key, value) {
     setForm((f) => ({ ...f, [key]: value }))
@@ -50,7 +52,7 @@ export default function VendorEligibilityFlow() {
     }
   }
 
-  if (alreadyPending || user?.vendorVerificationStatus === 'pending') {
+  if (alreadyPending) {
     return (
       <PageBackdrop>
         <Navbar />
@@ -90,7 +92,17 @@ export default function VendorEligibilityFlow() {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-xl bg-white border border-onLight/10 rounded-3xl p-8 md:p-10"
         >
-          <h1 className="font-display text-3xl font-semibold mb-1">Vendor eligibility</h1>
+          <h1 className="font-display text-3xl font-semibold mb-1">
+            {rejected ? 'Update your application' : 'Vendor eligibility'}
+          </h1>
+          {rejected && (
+            <div className="bg-coral/10 border border-coral/25 rounded-xl p-4 mb-6 text-sm text-onLight/70">
+              <p className="mb-1">Your previous application wasn't approved{existing?.rejectionReason ? ':' : '.'}</p>
+              {existing?.rejectionReason && (
+                <p className="text-onLight/85 font-medium">"{existing.rejectionReason}"</p>
+              )}
+            </div>
+          )}
           <p className="text-onLight/50 mb-8 text-sm">
             A few details about your business, plus identity documents for verification.
           </p>

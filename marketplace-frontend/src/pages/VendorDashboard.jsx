@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { motion } from 'framer-motion'
 import { Lock, PlusCircle, Wallet, Package } from 'lucide-react'
@@ -8,13 +9,21 @@ import { cn } from '@/lib/utils'
 
 export default function VendorDashboard() {
   const user = useSelector((s) => s.auth.user)
-  const verified = user?.vendorVerificationStatus === 'verified'
+  const status = user?.vendorVerificationStatus || 'unsubmitted'
+  const verified = status === 'verified'
 
   const actions = [
     { icon: PlusCircle, label: 'Add a product', locked: !verified },
     { icon: Wallet, label: 'View payouts', locked: !verified },
     { icon: Package, label: 'Manage orders', locked: !verified },
   ]
+
+  const statusBadge = {
+    verified: { label: 'Verified vendor', className: 'bg-emerald/15 text-emerald' },
+    pending: { label: 'Verification pending', className: 'bg-amber/15 text-amber' },
+    rejected: { label: 'Application rejected', className: 'bg-coral/15 text-coral' },
+    unsubmitted: { label: 'Application incomplete', className: 'bg-coral/15 text-coral' },
+  }[status]
 
   return (
     <PageBackdrop>
@@ -24,17 +33,12 @@ export default function VendorDashboard() {
           {user?.vendorEligibility?.businessName || 'Your shop'}
         </h1>
         <div className="flex items-center gap-2 mb-8">
-          <span
-            className={cn(
-              'text-xs font-medium px-2.5 py-1 rounded-full',
-              verified ? 'bg-emerald/15 text-emerald' : 'bg-amber/15 text-amber',
-            )}
-          >
-            {verified ? 'Verified vendor' : 'Verification pending'}
+          <span className={cn('text-xs font-medium px-2.5 py-1 rounded-full', statusBadge.className)}>
+            {statusBadge.label}
           </span>
         </div>
 
-        {!verified && (
+        {status === 'pending' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -42,6 +46,40 @@ export default function VendorDashboard() {
           >
             Your application is still under review. You can explore the dashboard shell below, but
             listing products and accessing payouts stay locked until you're verified.
+          </motion.div>
+        )}
+
+        {status === 'rejected' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-coral/10 border border-coral/25 text-onLight/70 text-sm rounded-2xl p-5 mb-8 max-w-xl"
+          >
+            <p className="mb-2">
+              Your vendor application wasn't approved
+              {user?.vendorEligibility?.rejectionReason ? ':' : '.'}
+            </p>
+            {user?.vendorEligibility?.rejectionReason && (
+              <p className="text-onLight/85 font-medium mb-3">
+                "{user.vendorEligibility.rejectionReason}"
+              </p>
+            )}
+            <Link to="/onboarding/vendor" className="text-coral font-medium underline">
+              Update and resubmit your application
+            </Link>
+          </motion.div>
+        )}
+
+        {status === 'unsubmitted' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-coral/10 border border-coral/25 text-onLight/70 text-sm rounded-2xl p-5 mb-8 max-w-xl"
+          >
+            <p className="mb-3">You haven't submitted your vendor eligibility form yet.</p>
+            <Link to="/onboarding/vendor" className="text-coral font-medium underline">
+              Complete your application
+            </Link>
           </motion.div>
         )}
 

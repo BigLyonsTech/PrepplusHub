@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Check, X, Activity, LayoutGrid } from 'lucide-react'
 import Navbar from '@/components/Navbar'
@@ -16,6 +17,8 @@ const sections = ['Vendor Queue', 'Customer Queue', 'Activity Log', 'Dashboard C
 
 export default function AdminDashboard() {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const user = useSelector((s) => s.auth.user)
   const { vendorQueue, customerQueue, activityLog, dashboardCuration, status, error } = useSelector(
     (s) => s.admin,
   )
@@ -26,8 +29,16 @@ export default function AdminDashboard() {
   const allCategories = ['Electronics', 'Fashion', 'Home', 'Beauty', 'Books', 'Sports']
 
   useEffect(() => {
-    dispatch(fetchAdminDashboard())
-  }, [dispatch])
+    if (user && user.role !== 'admin') {
+      navigate('/', { replace: true })
+    }
+  }, [user, navigate])
+
+  useEffect(() => {
+    if (user?.role === 'admin') dispatch(fetchAdminDashboard())
+  }, [dispatch, user])
+
+  if (user && user.role !== 'admin') return null
 
   function submitReject(id) {
     dispatch(rejectVendor({ id, reason: reason || 'Did not meet eligibility criteria.' }))

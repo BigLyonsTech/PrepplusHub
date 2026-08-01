@@ -7,21 +7,7 @@ import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
 import { Field, Input } from '@/components/ui/Input'
 import { loginUser } from '@/store/slices/authSlice'
-
-function routeForUser(user) {
-  if (!user) return '/role-confirmation'
-  if (user.role === 'admin') return '/admin'
-  if (user.role === 'vendor') {
-    if (!user.vendorVerificationStatus) return '/onboarding/vendor'
-    return '/vendor/dashboard'
-  }
-  if (user.role === 'customer') {
-    if (user.onboardingStage === 'personalizing') return '/onboarding/quiz'
-    return '/customer/dashboard'
-  }
-  if (user.onboardingStage === 'role_selection' || !user.role) return '/role-confirmation'
-  return '/customer/dashboard'
-}
+import { routeForUser } from '@/lib/routing'
 
 export default function Login() {
   const dispatch = useDispatch()

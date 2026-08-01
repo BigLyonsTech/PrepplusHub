@@ -38,10 +38,16 @@ export default function Navbar() {
             ))}
             {user?.role === 'vendor' && (
               <Link
-                to="/vendor/dashboard"
+                to={
+                  !user.vendorVerificationStatus || user.vendorVerificationStatus === 'rejected'
+                    ? '/onboarding/vendor'
+                    : '/vendor/dashboard'
+                }
                 className="text-sm text-onLight/60 hover:text-leaf-dim hover:bg-leaf/8 rounded-full px-3.5 py-2 transition-colors"
               >
-                Vendor Dashboard
+                {!user.vendorVerificationStatus || user.vendorVerificationStatus === 'rejected'
+                  ? 'Complete Application'
+                  : 'Vendor Dashboard'}
               </Link>
             )}
             {user?.role === 'customer' && (
