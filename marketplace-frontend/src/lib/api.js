@@ -69,6 +69,7 @@ export const api = {
   getProducts: (category) =>
     request(category ? `/products?category=${encodeURIComponent(category)}` : '/products'),
   getProduct: (id) => request(`/products/${id}`),
+  getVendorProducts: (vendorId) => request(`/products/vendor/${vendorId}`),
   createProduct: (body) => request('/products', { method: 'POST', body: JSON.stringify(body) }),
 
   // Cart

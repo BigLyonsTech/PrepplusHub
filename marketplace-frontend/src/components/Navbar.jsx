@@ -27,15 +27,17 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                to={link.to}
-                className="text-sm text-onLight/60 hover:text-leaf-dim hover:bg-leaf/8 rounded-full px-3.5 py-2 transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks
+              .filter((link) => user?.role !== 'vendor' || link.label !== 'Sell on PrepplusHub')
+              .map((link) => (
+                <Link
+                  key={link.label}
+                  to={link.to}
+                  className="text-sm text-onLight/60 hover:text-leaf-dim hover:bg-leaf/8 rounded-full px-3.5 py-2 transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
             {user?.role === 'vendor' && (
               <Link
                 to={

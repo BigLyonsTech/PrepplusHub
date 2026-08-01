@@ -17,6 +17,25 @@ export const fetchProduct = createAsyncThunk('catalog/fetchProduct', async (id, 
   }
 })
 
+export const fetchVendorProducts = createAsyncThunk(
+  'catalog/fetchVendorProducts',
+  async (vendorId, { rejectWithValue }) => {
+    try {
+      return await api.getVendorProducts(vendorId)
+    } catch (e) {
+      return rejectWithValue(e.message)
+    }
+  },
+)
+
+export const createProduct = createAsyncThunk('catalog/createProduct', async (body, { rejectWithValue }) => {
+  try {
+    return await api.createProduct(body)
+  } catch (e) {
+    return rejectWithValue(e.message)
+  }
+})
+
 export const fetchCart = createAsyncThunk('catalog/fetchCart', async (_, { rejectWithValue }) => {
   try {
     return await api.getCart()
@@ -115,6 +134,8 @@ export const addVendorReview = createAsyncThunk(
 const initialState = {
   products: [],
   currentProduct: null,
+  vendorProducts: [],
+  vendorProductsStatus: 'idle',
   cart: [],
   productReviews: [],
   vendorReviews: [],
@@ -153,6 +174,20 @@ const catalogSlice = createSlice({
         const idx = state.products.findIndex((p) => p.id === action.payload.id)
         if (idx >= 0) state.products[idx] = action.payload
         else state.products.push(action.payload)
+      })
+      .addCase(fetchVendorProducts.pending, (state) => {
+        state.vendorProductsStatus = 'loading'
+      })
+      .addCase(fetchVendorProducts.fulfilled, (state, action) => {
+        state.vendorProductsStatus = 'succeeded'
+        state.vendorProducts = action.payload || []
+      })
+      .addCase(fetchVendorProducts.rejected, (state) => {
+        state.vendorProductsStatus = 'failed'
+      })
+      .addCase(createProduct.fulfilled, (state, action) => {
+        state.vendorProducts = [action.payload, ...state.vendorProducts]
+        state.products = [action.payload, ...state.products]
       })
       .addCase(fetchCart.fulfilled, (state, action) => {
         state.cart = action.payload || []
