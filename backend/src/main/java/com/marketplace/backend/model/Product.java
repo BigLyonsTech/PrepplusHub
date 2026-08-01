@@ -1,11 +1,17 @@
 package com.marketplace.backend.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 
 @Document(collection = "products")
+@CompoundIndexes({
+        @CompoundIndex(name = "category_active_idx", def = "{'category': 1, 'active': 1}"),
+        @CompoundIndex(name = "vendorId_active_idx", def = "{'vendorId': 1, 'active': 1}"),
+})
 public class Product {
 
     @Id

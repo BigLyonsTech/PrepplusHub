@@ -1,11 +1,13 @@
 package com.marketplace.backend.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 
 @Document(collection = "vendor_reviews")
+@CompoundIndex(name = "vendorId_createdAt_idx", def = "{'vendorId': 1, 'createdAt': -1}")
 public class VendorReview {
 
     @Id

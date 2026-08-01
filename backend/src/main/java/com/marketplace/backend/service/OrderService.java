@@ -13,8 +13,11 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 public class OrderService {
@@ -59,11 +62,18 @@ public class OrderService {
         addr.setPhone(request.getPhone());
         order.setDeliveryAddress(addr);
 
+        List<String> productIds = user.getCart().stream().map(User.CartItem::getProductId).toList();
+        Map<String, Product> productsById = StreamSupport
+                .stream(productRepository.findAllById(productIds).spliterator(), false)
+                .collect(Collectors.toMap(Product::getId, p -> p, (a, b) -> a, HashMap::new));
+
         List<Order.OrderLine> lines = new ArrayList<>();
         double total = 0;
         for (User.CartItem item : user.getCart()) {
-            Product product = productRepository.findById(item.getProductId())
-                    .orElseThrow(() -> new ApiException("Product not found: " + item.getProductId(), HttpStatus.BAD_REQUEST));
+            Product product = productsById.get(item.getProductId());
+            if (product == null) {
+                throw new ApiException("Product not found: " + item.getProductId(), HttpStatus.BAD_REQUEST);
+            }
             Order.OrderLine line = new Order.OrderLine();
             line.setProductId(product.getId());
             line.setProductName(product.getName());

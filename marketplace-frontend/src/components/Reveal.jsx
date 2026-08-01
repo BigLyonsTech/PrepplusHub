@@ -1,41 +1,22 @@
-import { useRef, useEffect } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { motion } from 'framer-motion'
 
-gsap.registerPlugin(ScrollTrigger)
+const MotionTag = { div: motion.div, section: motion.section, li: motion.li, span: motion.span }
 
-// Wraps a section so it fades + slides up as it scrolls into view.
-// This is the one reusable primitive that implements Section 6's
-// "fade + slight upward slide as each section scrolls into view" direction.
-export default function Reveal({ children, as: Tag = 'div', className = '', delay = 0 }) {
-  const ref = useRef(null)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        el,
-        { opacity: 0, y: 32 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.9,
-          delay,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: el,
-            start: 'top 85%',
-            toggleActions: 'play none none reverse',
-          },
-        },
-      )
-    }, ref)
-    return () => ctx.revert()
-  }, [delay])
+// Wraps a section so it fades + slides up as it scrolls into view. Uses
+// framer-motion's whileInView instead of GSAP/ScrollTrigger — framer-motion
+// is already loaded on every route (Button, page transitions), so this
+// avoids pulling GSAP into non-landing-page bundles just for a scroll reveal.
+export default function Reveal({ children, as = 'div', className = '', delay = 0 }) {
+  const Tag = MotionTag[as] || motion.div
 
   return (
-    <Tag ref={ref} className={className}>
+    <Tag
+      initial={{ opacity: 0, y: 32 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.9, delay, ease: [0.16, 1, 0.3, 1] }}
+      className={className}
+    >
       {children}
     </Tag>
   )

@@ -14,15 +14,18 @@ const tabs = ['For You', 'Cart', 'Orders']
 export default function CustomerDashboard() {
   const user = useSelector((s) => s.auth.user)
   const products = useSelector((s) => s.catalog.products)
+  const catalogStatus = useSelector((s) => s.catalog.status)
   const cart = useSelector((s) => s.catalog.cart)
   const orders = useSelector((s) => s.catalog.orders)
   const dispatch = useDispatch()
   const [tab, setTab] = useState('For You')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    dispatch(fetchProducts())
-    dispatch(fetchCart())
-    dispatch(fetchOrders())
+    const tasks = [dispatch(fetchCart()), dispatch(fetchOrders())]
+    if (catalogStatus !== 'succeeded') tasks.push(dispatch(fetchProducts()))
+    Promise.all(tasks).finally(() => setLoading(false))
+    // Intentionally mount-only — including catalogStatus here would refetch every time it changes.
   }, [dispatch])
 
   const interests = user?.personalizationProfile?.interests || []
@@ -66,22 +69,28 @@ export default function CustomerDashboard() {
 
         <AnimatePresence mode="wait">
           {tab === 'For You' && (
-            <motion.div
-              key="feed"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"
-            >
-              {feed.map((p) => (
-                <ProductCard key={p.id} product={p} onAdd={() => dispatch(addToCart(p.id))} />
-              ))}
-            </motion.div>
+            loading ? (
+              <EmptyState text="Loading your feed…" />
+            ) : (
+              <motion.div
+                key="feed"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"
+              >
+                {feed.map((p) => (
+                  <ProductCard key={p.id} product={p} onAdd={() => dispatch(addToCart(p.id))} />
+                ))}
+              </motion.div>
+            )
           )}
 
           {tab === 'Cart' && (
             <motion.div key="cart" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              {cart.length === 0 ? (
+              {loading ? (
+                <EmptyState text="Loading your cart…" />
+              ) : cart.length === 0 ? (
                 <EmptyState text="Your cart is empty. Add something you actually want." />
               ) : (
                 <div className="flex flex-col gap-3 max-w-xl">
@@ -108,7 +117,9 @@ export default function CustomerDashboard() {
 
           {tab === 'Orders' && (
             <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              {orders.length === 0 ? (
+              {loading ? (
+                <EmptyState text="Loading your orders…" />
+              ) : orders.length === 0 ? (
                 <EmptyState text="No orders yet. Once you check out, they'll show up here." />
               ) : (
                 <div className="flex flex-col gap-3 max-w-xl">

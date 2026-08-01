@@ -39,6 +39,7 @@ public class User {
 
     private PersonalizationProfile personalizationProfile;
     private VendorEligibility vendorEligibility;
+    @Indexed
     private String vendorVerificationStatus; // pending | verified | rejected | null
     private ProfileCustomization profileCustomization;
 

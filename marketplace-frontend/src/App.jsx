@@ -2,10 +2,12 @@ import { Suspense, lazy } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import PageLoader from './components/PageLoader'
+import ChatWidget from './components/ChatWidget'
 
-// Every page is code-split. Three.js is gone entirely (replaced by the
-// cart-reveal hero animation) and GSAP only loads with the landing page —
-// dashboards and forms load fast with none of that weight.
+// Every page is code-split. Three.js is gone entirely (Logo3D is a CSS/
+// framer-motion flip, not WebGL) and GSAP isn't imported by any live code
+// path — Reveal.jsx uses framer-motion's whileInView instead, so every
+// route (including the landing page) loads without that extra weight.
 const LandingPage = lazy(() => import('./pages/LandingPage'))
 const AuthEntry = lazy(() => import('./pages/AuthEntry'))
 const Login = lazy(() => import('./pages/Login'))
@@ -27,46 +29,49 @@ export default function App() {
   const location = useLocation()
 
   return (
-    <Suspense fallback={<PageLoader />}>
-      <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          {/* 1. Landing */}
-          <Route path="/" element={<LandingPage />} />
+    <>
+      <Suspense fallback={<PageLoader />}>
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
+            {/* 1. Landing */}
+            <Route path="/" element={<LandingPage />} />
 
-          {/* 2. Auth Entry + login */}
-          <Route path="/auth" element={<AuthEntry />} />
-          <Route path="/login" element={<Login />} />
+            {/* 2. Auth Entry + login */}
+            <Route path="/auth" element={<AuthEntry />} />
+            <Route path="/login" element={<Login />} />
 
-          {/* 3–4. Registration + OTP */}
-          <Route path="/register" element={<RegistrationForm />} />
-          <Route path="/verify-otp" element={<OTPVerification />} />
+            {/* 3–4. Registration + OTP */}
+            <Route path="/register" element={<RegistrationForm />} />
+            <Route path="/verify-otp" element={<OTPVerification />} />
 
-          {/* 5. Role Confirmation */}
-          <Route path="/role-confirmation" element={<RoleConfirmation />} />
+            {/* 5. Role Confirmation */}
+            <Route path="/role-confirmation" element={<RoleConfirmation />} />
 
-          {/* 6–7. Onboarding */}
-          <Route path="/onboarding/quiz" element={<CustomerOnboardingQuiz />} />
-          <Route path="/onboarding/vendor" element={<VendorEligibilityFlow />} />
+            {/* 6–7. Onboarding */}
+            <Route path="/onboarding/quiz" element={<CustomerOnboardingQuiz />} />
+            <Route path="/onboarding/vendor" element={<VendorEligibilityFlow />} />
 
-          {/* 8–10. Dashboards */}
-          <Route path="/customer/dashboard" element={<CustomerDashboard />} />
-          <Route path="/vendor/dashboard" element={<VendorDashboard />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+            {/* 8–10. Dashboards */}
+            <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+            <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
 
-          {/* 11. Profile */}
-          <Route path="/profile" element={<ProfileCustomization />} />
+            {/* 11. Profile */}
+            <Route path="/profile" element={<ProfileCustomization />} />
 
-          {/* Public browsing + 12. Product detail */}
-          <Route path="/products" element={<ProductsBrowse />} />
-          <Route path="/products/:id" element={<ProductDetailPage />} />
+            {/* Public browsing + 12. Product detail */}
+            <Route path="/products" element={<ProductsBrowse />} />
+            <Route path="/products/:id" element={<ProductDetailPage />} />
 
-          {/* 13. Checkout */}
-          <Route path="/checkout" element={<CheckoutFlow />} />
+            {/* 13. Checkout */}
+            <Route path="/checkout" element={<CheckoutFlow />} />
 
-          {/* 14. Terms */}
-          <Route path="/terms" element={<TermsAndConditions />} />
-        </Routes>
-      </AnimatePresence>
-    </Suspense>
+            {/* 14. Terms */}
+            <Route path="/terms" element={<TermsAndConditions />} />
+          </Routes>
+        </AnimatePresence>
+      </Suspense>
+      <ChatWidget />
+    </>
   )
 }

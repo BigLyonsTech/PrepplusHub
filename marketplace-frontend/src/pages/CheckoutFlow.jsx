@@ -19,6 +19,7 @@ export default function CheckoutFlow() {
   const [step, setStep] = useState(1)
   const [placed, setPlaced] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
   const [error, setError] = useState('')
   const [delivery, setDelivery] = useState({
     fullName: user?.name || '',
@@ -27,8 +28,9 @@ export default function CheckoutFlow() {
   })
 
   useEffect(() => {
-    dispatch(fetchProducts())
-    dispatch(fetchCart())
+    Promise.all([dispatch(fetchProducts()), dispatch(fetchCart())]).finally(() =>
+      setInitialLoading(false),
+    )
   }, [dispatch])
 
   const total = cart.reduce((sum, c) => {
@@ -158,12 +160,18 @@ export default function CheckoutFlow() {
 
         <aside className="bg-white border border-onLight/10 rounded-2xl p-6 h-fit">
           <h3 className="font-semibold text-sm mb-4">Order summary</h3>
-          <div className="flex justify-between text-sm text-onLight/60 mb-2">
-            <span>Items</span><span>{cart.reduce((a, c) => a + c.quantity, 0)}</span>
-          </div>
-          <div className="flex justify-between font-semibold pt-3 border-t border-onLight/10">
-            <span>Total</span><span>₦{total.toLocaleString()}</span>
-          </div>
+          {initialLoading ? (
+            <p className="text-sm text-onLight/45">Loading order summary…</p>
+          ) : (
+            <>
+              <div className="flex justify-between text-sm text-onLight/60 mb-2">
+                <span>Items</span><span>{cart.reduce((a, c) => a + c.quantity, 0)}</span>
+              </div>
+              <div className="flex justify-between font-semibold pt-3 border-t border-onLight/10">
+                <span>Total</span><span>₦{total.toLocaleString()}</span>
+              </div>
+            </>
+          )}
         </aside>
       </div>
     </PageBackdrop>

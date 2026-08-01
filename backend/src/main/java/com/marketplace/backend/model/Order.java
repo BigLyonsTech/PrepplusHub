@@ -1,6 +1,7 @@
 package com.marketplace.backend.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "orders")
+@CompoundIndex(name = "userId_placedAt_idx", def = "{'userId': 1, 'placedAt': -1}")
 public class Order {
 
     @Id

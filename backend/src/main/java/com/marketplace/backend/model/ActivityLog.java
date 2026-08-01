@@ -1,6 +1,8 @@
 package com.marketplace.backend.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.IndexDirection;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -15,6 +17,7 @@ public class ActivityLog {
     private String userId;
     private String action;
     private Map<String, Object> metadata = new HashMap<>();
+    @Indexed(direction = IndexDirection.DESCENDING)
     private Instant createdAt = Instant.now();
 
     public ActivityLog() {}
