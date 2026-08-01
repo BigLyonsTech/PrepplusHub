@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { cloudinaryUrl } from '@/lib/cloudinary'
 import { CATEGORY_TINTS } from '@/lib/categoryTints'
 import { discountPercent } from '@/components/PriceTag'
 import { cn } from '@/lib/utils'
 
 export default function ProductThumb({ product, className, iconSize = 32 }) {
+  const [failed, setFailed] = useState(false)
   const tint = CATEGORY_TINTS[product.category] || CATEGORY_TINTS.default
   const pct = discountPercent(product)
 
@@ -24,11 +26,12 @@ export default function ProductThumb({ product, className, iconSize = 32 }) {
           -{pct}%
         </span>
       )}
-      {src ? (
+      {src && !failed ? (
         <img
           src={src}
           alt={product.name}
           loading="lazy"
+          onError={() => setFailed(true)}
           className={cn('w-full h-full', isLocalAsset ? 'object-contain p-3' : 'object-cover')}
         />
       ) : (
