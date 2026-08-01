@@ -104,4 +104,7 @@ export const api = {
     }),
 
   health: () => request('/health'),
+
+  // Chat support
+  chat: (body) => request('/chat', { method: 'POST', body: JSON.stringify(body) }),
 }
