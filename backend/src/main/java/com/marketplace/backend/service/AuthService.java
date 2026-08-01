@@ -21,6 +21,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final ActivityService activityService;
+    private final EmailService emailService;
     private final SecureRandom random = new SecureRandom();
 
     @Value("${app.otp.length:6}")
@@ -29,19 +30,26 @@ public class AuthService {
     @Value("${app.otp.expiration-minutes:10}")
     private int otpExpirationMinutes;
 
-    @Value("${app.otp.expose-in-response:true}")
+    // Forces OTP into the API response/console even when email sending
+    // succeeds. Leave false in production — the fallback in maybeExposeOtp
+    // already reveals the OTP automatically whenever email isn't configured
+    // or a send fails, so this flag is only for deliberately keeping dev-mode
+    // on even with SMTP set up.
+    @Value("${app.otp.expose-in-response:false}")
     private boolean exposeOtp;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
-            ActivityService activityService
+            ActivityService activityService,
+            EmailService emailService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.activityService = activityService;
+        this.emailService = emailService;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -78,12 +86,9 @@ public class AuthService {
         userRepository.save(user);
         activityService.log(user.getId(), "register");
 
-        // In production, email the OTP. For local dev we can return it.
-        System.out.println("[PrepplusHub OTP] " + user.getEmail() + " => " + otp);
-
         return AuthResponse.pending(
                 user.getEmail(),
-                exposeOtp ? otp : null,
+                maybeExposeOtp(user.getEmail(), otp),
                 "Account created. Verify the OTP sent to your email."
         );
     }
@@ -127,10 +132,9 @@ public class AuthService {
             user.setOtpCode(otp);
             user.setOtpExpiresAt(Instant.now().plus(otpExpirationMinutes, ChronoUnit.MINUTES));
             userRepository.save(user);
-            System.out.println("[PrepplusHub OTP] " + user.getEmail() + " => " + otp);
             AuthResponse pending = AuthResponse.pending(
                     user.getEmail(),
-                    exposeOtp ? otp : null,
+                    maybeExposeOtp(user.getEmail(), otp),
                     "Email not verified. A new OTP has been sent."
             );
             return pending;
@@ -151,8 +155,7 @@ public class AuthService {
         user.setOtpCode(otp);
         user.setOtpExpiresAt(Instant.now().plus(otpExpirationMinutes, ChronoUnit.MINUTES));
         userRepository.save(user);
-        System.out.println("[PrepplusHub OTP] " + user.getEmail() + " => " + otp);
-        return AuthResponse.pending(user.getEmail(), exposeOtp ? otp : null, "OTP resent.");
+        return AuthResponse.pending(user.getEmail(), maybeExposeOtp(user.getEmail(), otp), "OTP resent.");
     }
 
     public UserResponse me(String userId) {
@@ -165,5 +168,20 @@ public class AuthService {
         int bound = (int) Math.pow(10, otpLength);
         int code = random.nextInt(bound / 10, bound);
         return String.valueOf(code);
+    }
+
+    /**
+     * Emails the OTP when SMTP is configured. Falls back to console-printing
+     * and returning it in the API response whenever sending isn't possible
+     * (not configured, or the send itself fails) so registration still works
+     * end-to-end without SMTP set up.
+     */
+    private String maybeExposeOtp(String email, String otp) {
+        boolean sent = emailService.sendOtp(email, otp);
+        boolean reveal = exposeOtp || !sent;
+        if (reveal) {
+            System.out.println("[PrepplusHub OTP] " + email + " => " + otp);
+        }
+        return reveal ? otp : null;
     }
 }

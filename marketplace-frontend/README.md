@@ -122,8 +122,8 @@ The app talks to the Spring Boot API via Vite proxy (`/api` → `http://localhos
 
 Optional: set `VITE_API_URL=http://localhost:8080/api` to call the API without the proxy.
 
-**Seeded admin:** `admin@prepplushub.com` / `admin12345`  
-**OTP in dev:** shown on the verify screen and in the backend console (`[PrepplusHub OTP]`).
+**Seeded admin:** `admin@prepplushub.com` — password comes from `ADMIN_SEED_PASSWORD` if set, otherwise a random one is generated and printed once in the backend console at first boot.
+**OTP in dev:** if SMTP isn't configured, OTPs still show on the verify screen and in the backend console (`[PrepplusHub OTP]`); once SMTP is set up they're emailed instead.
 
 ## Known gaps / next steps
 

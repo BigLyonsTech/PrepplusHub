@@ -23,13 +23,13 @@ API base: `http://localhost:8080/api`
 
 | Email | Password | Role |
 |---|---|---|
-| `admin@aro.com` | `admin12345` | admin |
+| `admin@prepplushub.com` | from `ADMIN_SEED_PASSWORD`, or a random one printed once at first boot | admin |
 
 On first start, 12 demo products are seeded if the products collection is empty.
 
 ## Dev OTP
 
-Registration returns `devOtp` in the JSON response when `app.otp.expose-in-response=true` (default). The OTP is also printed in the server console as `[Aro OTP] email => code`.
+If SMTP isn't configured (`MAIL_HOST`/`MAIL_USERNAME`/`MAIL_PASSWORD`), registration returns `devOtp` in the JSON response and prints it to the server console as `[PrepplusHub OTP] email => code`. Once SMTP is configured, OTPs are emailed instead and no longer appear in the response.
 
 ## API map
 

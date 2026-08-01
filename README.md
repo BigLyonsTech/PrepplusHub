@@ -167,10 +167,8 @@ cd backend
 ```
 *   **Base URL:** `http://localhost:8080/api`
 *   **Database Seeding:** On the very first launch, the backend will automatically seed 12 demo products and the primary Admin account if the database collection is empty.
-*   **Seeded Admin Credentials:**
-    *   *Email:* `admin@prepplushub.com`
-    *   *Password:* `admin12345`
-*   **Dev OTP Mode:** During registration, OTPs are printed directly to the server console log (`[PrepplusHub OTP] email => code`) and also returned in the registration JSON response for painless testing.
+*   **Seeded Admin Credentials:** email is always `admin@prepplushub.com`. The password comes from the `ADMIN_SEED_PASSWORD` env var if set; otherwise a random 16-character password is generated at boot and printed once to the console (`[PrepplusHub Seed] Generated admin password...`) — check the logs right after first boot if you didn't set one.
+*   **Dev OTP Mode:** if no SMTP is configured (`MAIL_HOST`/`MAIL_USERNAME`/`MAIL_PASSWORD`), OTPs are printed to the server console log (`[PrepplusHub OTP] email => code`) and returned in the registration JSON response so registration can still be tested end-to-end. Once SMTP is configured, OTPs are emailed instead and no longer appear in the response.
 
 ### 3. Run the React Frontend
 Open a new terminal window, navigate to the frontend directory, install dependencies, and spin up the Vite development server:

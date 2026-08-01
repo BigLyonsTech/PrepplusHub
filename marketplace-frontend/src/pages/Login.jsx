@@ -71,9 +71,6 @@ export default function Login() {
           <Button type="submit" size="lg" className="w-full mt-8" disabled={status === 'loading'}>
             {status === 'loading' ? 'Signing in…' : 'Log in'}
           </Button>
-          <p className="text-center text-xs text-onLight/40 mt-4">
-            Demo admin: admin@prepplushub.com / admin12345
-          </p>
         </motion.form>
       </div>
     </PageBackdrop>

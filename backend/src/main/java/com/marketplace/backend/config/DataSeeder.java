@@ -11,11 +11,17 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.List;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
+
+    private static final String ADMIN_EMAIL = "admin@prepplushub.com";
+    private static final String PASSWORD_CHARS =
+            "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%";
+    private final SecureRandom random = new SecureRandom();
 
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
@@ -24,6 +30,13 @@ public class DataSeeder implements CommandLineRunner {
 
     @Value("${app.seed.enabled:true}")
     private boolean seedEnabled;
+
+    // No insecure default — if unset, a random password is generated at boot
+    // and logged once, the same way Spring Security prints its own generated
+    // password. Set this explicitly in production so the admin password is
+    // stable across restarts instead of only ever known from a boot log.
+    @Value("${app.admin-seed.password:}")
+    private String configuredAdminPassword;
 
     public DataSeeder(
             ProductRepository productRepository,
@@ -48,13 +61,17 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedAdmin() {
-        if (userRepository.findByEmail("admin@prepplushub.com").isPresent()) {
+        if (userRepository.findByEmail(ADMIN_EMAIL).isPresent()) {
             return;
         }
+        String password = configuredAdminPassword.isBlank()
+                ? generatePassword()
+                : configuredAdminPassword;
+
         User admin = new User();
         admin.setName("PrepplusHub Admin");
-        admin.setEmail("admin@prepplushub.com");
-        admin.setPassword(passwordEncoder.encode("admin12345"));
+        admin.setEmail(ADMIN_EMAIL);
+        admin.setPassword(passwordEncoder.encode(password));
         admin.setRole("admin");
         admin.setOnboardingStage("active");
         admin.setEmailVerified(true);
@@ -62,7 +79,21 @@ public class DataSeeder implements CommandLineRunner {
         admin.setCreatedAt(Instant.now());
         admin.setUpdatedAt(Instant.now());
         userRepository.save(admin);
-        System.out.println("[PrepplusHub Seed] Admin: admin@prepplushub.com / admin12345");
+
+        if (configuredAdminPassword.isBlank()) {
+            System.out.println("[PrepplusHub Seed] Generated admin password (save this — it will "
+                    + "not be shown again): " + ADMIN_EMAIL + " / " + password);
+        } else {
+            System.out.println("[PrepplusHub Seed] Admin account created: " + ADMIN_EMAIL);
+        }
+    }
+
+    private String generatePassword() {
+        StringBuilder sb = new StringBuilder(16);
+        for (int i = 0; i < 16; i++) {
+            sb.append(PASSWORD_CHARS.charAt(random.nextInt(PASSWORD_CHARS.length())));
+        }
+        return sb.toString();
     }
 
     private void seedSettings() {
