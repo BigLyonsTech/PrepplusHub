@@ -133,7 +133,7 @@ export default function CheckoutFlow() {
                     const p = products.find((p) => p.id === c.productId)
                     if (!p) return null
                     return (
-                      <div key={c.productId} className="flex justify-between text-sm bg-white border border-onLight/10 rounded-lg p-3">
+                      <div key={c.productId} className="flex justify-between text-sm bg-surface border border-onLight/10 rounded-lg p-3">
                         <span>{p.name} × {c.quantity}</span>
                         <span>₦{(p.price * c.quantity).toLocaleString()}</span>
                       </div>
@@ -158,7 +158,7 @@ export default function CheckoutFlow() {
           </div>
         </div>
 
-        <aside className="bg-white border border-onLight/10 rounded-2xl p-6 h-fit">
+        <aside className="bg-surface border border-onLight/10 rounded-2xl p-6 h-fit">
           <h3 className="font-semibold text-sm mb-4">Order summary</h3>
           {initialLoading ? (
             <p className="text-sm text-onLight/45">Loading order summary…</p>

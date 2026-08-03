@@ -65,7 +65,7 @@ export default function RoleConfirmation() {
               type="button"
               onClick={() => setRole(opt.id)}
               className={cn(
-                'text-left p-6 rounded-2xl border-2 transition-colors bg-white',
+                'text-left p-6 rounded-2xl border-2 transition-colors bg-surface',
                 role === opt.id ? 'border-leaf' : 'border-onLight/10 hover:border-onLight/25',
               )}
             >

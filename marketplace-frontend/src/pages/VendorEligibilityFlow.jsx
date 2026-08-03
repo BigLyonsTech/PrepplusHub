@@ -90,7 +90,7 @@ export default function VendorEligibilityFlow() {
           onSubmit={handleSubmit}
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-xl bg-white border border-onLight/10 rounded-3xl p-8 md:p-10"
+          className="w-full max-w-xl bg-surface border border-onLight/10 rounded-3xl p-8 md:p-10"
         >
           <h1 className="font-display text-3xl font-semibold mb-1">
             {rejected ? 'Update your application' : 'Vendor eligibility'}

@@ -92,7 +92,7 @@ export default function OTPVerification() {
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 maxLength={1}
                 inputMode="numeric"
-                className="w-11 h-12 text-center text-lg rounded-xl border border-onLight/15 bg-white focus:border-leaf focus:ring-1 focus:ring-leaf outline-none"
+                className="w-11 h-12 text-center text-lg rounded-xl border border-onLight/15 bg-surface focus:border-leaf focus:ring-1 focus:ring-leaf outline-none"
               />
             ))}
           </div>

@@ -98,7 +98,7 @@ export default function CustomerDashboard() {
                     const p = products.find((p) => p.id === c.productId)
                     if (!p) return null
                     return (
-                      <div key={c.productId} className="flex justify-between items-center bg-white border border-onLight/10 rounded-xl p-4">
+                      <div key={c.productId} className="flex justify-between items-center bg-surface border border-onLight/10 rounded-xl p-4">
                         <div>
                           <div className="font-medium text-sm">{p.name}</div>
                           <div className="text-xs text-onLight/45">Qty {c.quantity}</div>
@@ -128,7 +128,7 @@ export default function CustomerDashboard() {
                     const title = first?.productName || products.find((p) => p.id === first?.productId)?.name || `Order ${o.id}`
                     const qty = o.items?.reduce((s, i) => s + i.quantity, 0) || 0
                     return (
-                      <div key={o.id} className="flex justify-between items-center bg-white border border-onLight/10 rounded-xl p-4">
+                      <div key={o.id} className="flex justify-between items-center bg-surface border border-onLight/10 rounded-xl p-4">
                         <div>
                           <div className="font-medium text-sm">{title}{o.items?.length > 1 ? ` +${o.items.length - 1}` : ''}</div>
                           <div className="text-xs text-onLight/45">
@@ -162,7 +162,7 @@ const ProductCard = memo(function ProductCard({ product, onAdd }) {
   return (
     <motion.div
       whileHover={{ y: -3 }}
-      className="bg-white border border-onLight/10 rounded-2xl overflow-hidden group"
+      className="bg-surface border border-onLight/10 rounded-2xl overflow-hidden group"
     >
       <Link to={`/products/${product.id}`} className="block aspect-[4/3]">
         <ProductThumb product={product} />

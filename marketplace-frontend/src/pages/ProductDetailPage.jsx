@@ -165,7 +165,7 @@ export default function ProductDetailPage() {
                 <p className="text-sm text-onLight/45">No product reviews yet — be the first.</p>
               )}
               {productReviews.map((r) => (
-                <div key={r.id} className="bg-white border border-onLight/10 rounded-xl p-4">
+                <div key={r.id} className="bg-surface border border-onLight/10 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">{r.author}</span>
                     <span className="text-xs text-amber">{'★'.repeat(r.rating)}</span>
@@ -199,7 +199,7 @@ export default function ProductDetailPage() {
                 <p className="text-sm text-onLight/45">No vendor reviews yet.</p>
               )}
               {vendorReviews.map((r) => (
-                <div key={r.id} className="bg-white border border-onLight/10 rounded-xl p-4">
+                <div key={r.id} className="bg-surface border border-onLight/10 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-onLight/40">Order {r.orderId}</span>
                     <span className="text-xs text-amber">{'★'.repeat(r.rating)}</span>

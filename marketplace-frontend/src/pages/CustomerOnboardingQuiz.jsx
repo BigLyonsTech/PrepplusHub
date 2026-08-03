@@ -81,7 +81,7 @@ export default function CustomerOnboardingQuiz() {
                         'py-4 rounded-xl border-2 text-sm font-medium transition-colors',
                         interests.includes(c)
                           ? 'border-leaf bg-leaf/5 text-leaf'
-                          : 'border-onLight/10 bg-white text-onLight/70 hover:border-onLight/25',
+                          : 'border-onLight/10 bg-surface text-onLight/70 hover:border-onLight/25',
                       )}
                     >
                       {c}
@@ -111,7 +111,7 @@ export default function CustomerOnboardingQuiz() {
                         'text-left py-4 px-5 rounded-xl border-2 text-sm font-medium transition-colors',
                         budget === b
                           ? 'border-leaf bg-leaf/5 text-leaf'
-                          : 'border-onLight/10 bg-white text-onLight/70 hover:border-onLight/25',
+                          : 'border-onLight/10 bg-surface text-onLight/70 hover:border-onLight/25',
                       )}
                     >
                       {b}
@@ -141,7 +141,7 @@ export default function CustomerOnboardingQuiz() {
                         'text-left py-4 px-5 rounded-xl border-2 transition-colors',
                         style === s.id
                           ? 'border-leaf bg-leaf/5'
-                          : 'border-onLight/10 bg-white hover:border-onLight/25',
+                          : 'border-onLight/10 bg-surface hover:border-onLight/25',
                       )}
                     >
                       <div className="text-sm font-medium">{s.label}</div>

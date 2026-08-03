@@ -65,7 +65,7 @@ export default function ProfileCustomization() {
                 value={isVendor ? shopDesc : bio}
                 onChange={(e) => (isVendor ? setShopDesc(e.target.value) : setBio(e.target.value))}
                 rows={4}
-                className="w-full px-4 py-3 rounded-xl border border-onLight/15 bg-white text-sm outline-none focus:border-leaf focus:ring-1 focus:ring-leaf"
+                className="w-full px-4 py-3 rounded-xl border border-onLight/15 bg-surface text-sm outline-none focus:border-leaf focus:ring-1 focus:ring-leaf"
                 placeholder={
                   isVendor
                     ? 'What does your shop sell, and what makes it different?'
@@ -130,7 +130,7 @@ export default function ProfileCustomization() {
           </div>
         </motion.div>
 
-        <div className="rounded-2xl border border-onLight/10 bg-white overflow-hidden h-fit sticky top-24">
+        <div className="rounded-2xl border border-onLight/10 bg-surface overflow-hidden h-fit sticky top-24">
           <div className="h-24" style={{ backgroundColor: accent }} />
           <div className="p-5">
             <div className="size-14 rounded-full bg-onLight/10 -mt-12 border-4 border-white mb-3" />

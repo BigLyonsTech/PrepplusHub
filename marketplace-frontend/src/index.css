@@ -1,18 +1,24 @@
 @import "tailwindcss";
 
+/* Dark mode is opt-in via a data-theme attribute on <html> (toggled by
+   ThemeToggle, see src/hooks/useTheme.js) rather than the OS media query
+   alone, so a user's explicit choice always wins. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
   /* --- Brand palette, from ui_theme.jpg --- */
-  --color-ink: #0C120E;          /* primary bg — hero / dark sections (green-black) */
-  --color-paper: #F6F8F5;        /* secondary bg — content sections (warm off-white) */
+  --color-ink: #0C120E;          /* primary bg — hero / dark sections (green-black), fixed regardless of theme */
+  --color-paper: #F6F8F5;        /* page bg — content sections; flips with theme */
+  --color-surface: #FFFFFF;      /* card/panel bg on top of paper; flips with theme */
   --color-leaf: #3FBF6B;         /* primary accent — CTAs, highlights (bright green) */
   --color-leaf-dim: #2E9C55;
   --color-canopy: #123D0A;       /* deep forest green — dark-section accents, badges */
-  --color-slate: #6B7A73;        /* muted sage-gray — secondary text/borders on dark bg */
+  --color-slate: #6B7A73;        /* muted sage-gray — secondary text/borders */
   --color-emerald: #2E7D5B;      /* success / verified states */
   --color-amber: #E0A030;        /* warning / pending states */
   --color-coral: #E5484D;        /* error / rejected states */
-  --color-onDark: #F4F7F4;       /* text on dark */
-  --color-onLight: #131A15;      /* text on light */
+  --color-onDark: #F4F7F4;       /* text on ink — fixed regardless of theme */
+  --color-onLight: #131A15;      /* body text on paper/surface; flips with theme */
   --color-line: color-mix(in oklab, var(--color-onLight) 10%, transparent);
   --color-line-dark: color-mix(in oklab, var(--color-onDark) 14%, transparent);
 
@@ -45,6 +51,20 @@
     0%, 100% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
   }
+}
+
+/* Dark theme — overrides the subset of tokens above that represent
+   "page content" (paper/surface/onLight). Tokens for the permanently-dark
+   hero/nav sections (ink, onDark) are intentionally left untouched, since
+   those sections are dark by design in both themes. --color-line derives
+   from --color-onLight via color-mix and re-resolves automatically. */
+:root[data-theme="dark"] {
+  --color-paper: #0E1712;
+  --color-surface: #16211B;
+  --color-onLight: #EAF0E9;
+  --color-slate: #93A69B;
+  --color-leaf: #4ECB7C;
+  --color-leaf-dim: #3FBF6B;
 }
 
 @layer base {
@@ -105,7 +125,7 @@
   }
 
   .card-surface {
-    background: color-mix(in oklab, var(--color-leaf) 6%, white);
+    background: color-mix(in oklab, var(--color-leaf) 6%, var(--color-surface));
   }
 
   /* Premium animated wordmark treatment — a slow-drifting spectrum rather

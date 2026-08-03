@@ -15,7 +15,7 @@ export function Input({ className, ...props }) {
   return (
     <input
       className={cn(
-        'w-full h-11 px-4 rounded-xl border border-onLight/15 bg-white text-sm text-onLight placeholder:text-onLight/35 focus:border-leaf focus:ring-1 focus:ring-leaf outline-none transition-colors',
+        'w-full h-11 px-4 rounded-xl border border-onLight/15 bg-surface text-sm text-onLight placeholder:text-onLight/35 focus:border-leaf focus:ring-1 focus:ring-leaf outline-none transition-colors',
         className,
       )}
       {...props}
@@ -27,7 +27,7 @@ export function Select({ className, children, ...props }) {
   return (
     <select
       className={cn(
-        'w-full h-11 px-4 rounded-xl border border-onLight/15 bg-white text-sm text-onLight focus:border-leaf focus:ring-1 focus:ring-leaf outline-none transition-colors',
+        'w-full h-11 px-4 rounded-xl border border-onLight/15 bg-surface text-sm text-onLight focus:border-leaf focus:ring-1 focus:ring-leaf outline-none transition-colors',
         className,
       )}
       {...props}

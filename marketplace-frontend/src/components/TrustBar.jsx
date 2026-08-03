@@ -10,7 +10,7 @@ const items = [
 
 export default function TrustBar() {
   return (
-    <section className="bg-white border-y border-onLight/8">
+    <section className="bg-surface border-y border-onLight/8">
       <div className="container-page py-8 grid grid-cols-2 md:grid-cols-4 gap-6">
         {items.map((item, i) => (
           <Reveal key={item.title} delay={i * 0.05} className="flex items-center gap-3">

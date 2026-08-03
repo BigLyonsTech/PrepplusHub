@@ -49,6 +49,7 @@ export const toggleFeaturedCategory = createAsyncThunk(
 
 const initialState = {
   vendorQueue: [],
+  approvedVendors: [],
   customerQueue: [],
   activityLog: [],
   dashboardCuration: {
@@ -72,6 +73,7 @@ const adminSlice = createSlice({
       .addCase(fetchAdminDashboard.fulfilled, (state, action) => {
         state.status = 'succeeded'
         state.vendorQueue = action.payload.vendorQueue || []
+        state.approvedVendors = action.payload.approvedVendors || []
         state.customerQueue = action.payload.customerQueue || []
         state.activityLog = action.payload.activityLog || []
         state.dashboardCuration = action.payload.dashboardCuration || {
@@ -85,7 +87,10 @@ const adminSlice = createSlice({
       })
       .addCase(approveVendor.fulfilled, (state, action) => {
         const v = state.vendorQueue.find((x) => x.id === action.payload)
-        if (v) v.status = 'verified'
+        if (v) {
+          v.status = 'verified'
+          state.approvedVendors = [v, ...state.approvedVendors]
+        }
         state.vendorQueue = state.vendorQueue.filter((x) => x.status === 'pending')
       })
       .addCase(rejectVendor.fulfilled, (state, action) => {

@@ -43,6 +43,11 @@ public class AdminService {
                 .map(this::vendorQueueItem)
                 .collect(Collectors.toList());
 
+        List<Map<String, Object>> approvedVendors = userRepository.findByVendorVerificationStatus("verified")
+                .stream()
+                .map(this::vendorQueueItem)
+                .collect(Collectors.toList());
+
         // Customer KYC queue — reserved for future flags; empty for now
         List<Map<String, Object>> customerQueue = List.of();
 
@@ -51,6 +56,7 @@ public class AdminService {
 
         Map<String, Object> result = new HashMap<>();
         result.put("vendorQueue", vendorQueue);
+        result.put("approvedVendors", approvedVendors);
         result.put("customerQueue", customerQueue);
         result.put("activityLog", activityLog);
         result.put("dashboardCuration", Map.of(

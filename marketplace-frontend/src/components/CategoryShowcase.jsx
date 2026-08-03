@@ -13,7 +13,7 @@ const categories = [
 
 export default function CategoryShowcase() {
   return (
-    <section className="bg-white py-24">
+    <section className="bg-surface py-24">
       <div className="container-page">
         <Reveal className="mb-10">
           <span className="text-sm font-medium text-leaf-dim">Explore</span>

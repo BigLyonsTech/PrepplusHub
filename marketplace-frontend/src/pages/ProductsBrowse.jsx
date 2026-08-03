@@ -51,7 +51,7 @@ export default function ProductsBrowse() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(i * 0.05, 0.4) }}
-              className="bg-white border border-onLight/10 rounded-2xl overflow-hidden"
+              className="bg-surface border border-onLight/10 rounded-2xl overflow-hidden"
             >
               <Link to={`/products/${p.id}`} className="block aspect-[4/3]">
                 <ProductThumb product={p} />

@@ -13,13 +13,13 @@ import {
 } from '@/store/slices/adminSlice'
 import { cn } from '@/lib/utils'
 
-const sections = ['Vendor Queue', 'Customer Queue', 'Activity Log', 'Dashboard Curation']
+const sections = ['Vendor Queue', 'Approved Vendors', 'Customer Queue', 'Activity Log', 'Dashboard Curation']
 
 export default function AdminDashboard() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const user = useSelector((s) => s.auth.user)
-  const { vendorQueue, customerQueue, activityLog, dashboardCuration, status, error } = useSelector(
+  const { vendorQueue, approvedVendors, customerQueue, activityLog, dashboardCuration, status, error } = useSelector(
     (s) => s.admin,
   )
   const [section, setSection] = useState(sections[0])
@@ -79,7 +79,7 @@ export default function AdminDashboard() {
               {vendorQueue
                 .filter((v) => v.status === 'pending')
                 .map((v) => (
-                  <div key={v.id} className="bg-white border border-onLight/10 rounded-2xl p-5">
+                  <div key={v.id} className="bg-surface border border-onLight/10 rounded-2xl p-5">
                     <div className="flex justify-between items-start gap-4 flex-wrap">
                       <div>
                         <h3 className="font-medium">{v.businessName || v.name}</h3>
@@ -127,6 +127,30 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {section === 'Approved Vendors' && (
+            <div className="flex flex-col gap-4">
+              {approvedVendors.length === 0 && (
+                <p className="text-sm text-onLight/45">No approved vendors yet.</p>
+              )}
+              {approvedVendors.map((v) => (
+                <div key={v.id} className="bg-surface border border-onLight/10 rounded-2xl p-5">
+                  <div className="flex justify-between items-start gap-4 flex-wrap">
+                    <div>
+                      <h3 className="font-medium">{v.businessName || v.name}</h3>
+                      <p className="text-xs text-onLight/45 mt-1">
+                        {v.businessCategory} · {v.expectedProductRange}
+                      </p>
+                      <p className="text-xs text-onLight/35 mt-1">{v.email}</p>
+                    </div>
+                    <span className="flex items-center gap-1.5 text-xs font-medium bg-emerald/15 text-emerald rounded-full px-3 py-1.5">
+                      <Check size={14} /> Verified
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {section === 'Customer Queue' && (
             <div className="flex flex-col gap-3">
               {customerQueue.length === 0 && (
@@ -135,7 +159,7 @@ export default function AdminDashboard() {
               {customerQueue.map((c) => (
                 <div
                   key={c.id}
-                  className="bg-white border border-onLight/10 rounded-2xl p-5 flex justify-between items-center flex-wrap gap-3"
+                  className="bg-surface border border-onLight/10 rounded-2xl p-5 flex justify-between items-center flex-wrap gap-3"
                 >
                   <div>
                     <h3 className="font-medium">{c.name}</h3>
@@ -157,7 +181,7 @@ export default function AdminDashboard() {
               {activityLog.map((a) => (
                 <div
                   key={a.id}
-                  className="flex justify-between text-sm bg-white border border-onLight/10 rounded-xl px-4 py-3"
+                  className="flex justify-between text-sm bg-surface border border-onLight/10 rounded-xl px-4 py-3"
                 >
                   <span className="text-onLight/70">
                     User {a.userId} — {String(a.action).replace('_', ' ')}

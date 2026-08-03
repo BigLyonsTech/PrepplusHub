@@ -146,7 +146,7 @@ export default function LandingPage() {
       <TrustBar />
 
       {/* Trending — an actual slideshow */}
-      <section className="bg-white py-24">
+      <section className="bg-surface py-24">
         <div className="container-page">
           <Reveal className="flex items-end justify-between mb-8 flex-wrap gap-4">
             <div>
@@ -187,7 +187,7 @@ export default function LandingPage() {
                 'Every vendor manually verified before listing',
                 'Rate the vendor, not just the product',
               ].map((item) => (
-                <li key={item} className="flex gap-4 items-start p-5 rounded-2xl bg-white border border-onLight/10">
+                <li key={item} className="flex gap-4 items-start p-5 rounded-2xl bg-surface border border-onLight/10">
                   <span className="w-2 h-2 rounded-full bg-leaf mt-2 shrink-0" />
                   <span className="text-onLight/80">{item}</span>
                 </li>
@@ -211,7 +211,7 @@ export default function LandingPage() {
               ].map((item) => (
                 <li
                   key={item}
-                  className="flex gap-4 items-start p-5 rounded-2xl bg-white border border-onLight/10"
+                  className="flex gap-4 items-start p-5 rounded-2xl bg-surface border border-onLight/10"
                 >
                   <span className="w-2 h-2 rounded-full bg-canopy mt-2 shrink-0" />
                   <span className="text-onLight/80">{item}</span>
@@ -233,7 +233,7 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials — slideshow */}
-      <section className="bg-white py-28">
+      <section className="bg-surface py-28">
         <div className="container-page">
           <Reveal>
             <TestimonialCarousel />

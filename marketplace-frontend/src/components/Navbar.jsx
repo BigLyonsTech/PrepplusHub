@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { ShoppingBag, User2 } from 'lucide-react'
 import Button from './ui/Button'
 import Logo3D from './Logo3D'
+import ThemeToggle from './ThemeToggle'
 import { cn } from '@/lib/utils'
 import { logout } from '@/store/slices/authSlice'
 
@@ -71,6 +72,7 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-1.5">
+            <ThemeToggle />
             <button
               onClick={() => navigate(isAuthenticated ? '/checkout' : '/auth?intent=customer')}
               className="relative p-2.5 rounded-full hover:bg-onLight/5 transition-colors"

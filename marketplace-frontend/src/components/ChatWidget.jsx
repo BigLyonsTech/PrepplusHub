@@ -51,7 +51,7 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.2 }}
-            className="w-[min(360px,calc(100vw-2.5rem))] h-[min(480px,calc(100vh-8rem))] bg-white rounded-3xl border border-onLight/10 shadow-2xl flex flex-col overflow-hidden"
+            className="w-[min(360px,calc(100vw-2.5rem))] h-[min(480px,calc(100vh-8rem))] bg-surface rounded-3xl border border-onLight/10 shadow-2xl flex flex-col overflow-hidden"
           >
             <div className="bg-ink text-onDark px-5 py-4 flex items-center justify-between shrink-0">
               <div>
@@ -68,7 +68,7 @@ export default function ChatWidget() {
             </div>
 
             <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-paper">
-              <div className="max-w-[85%] bg-white border border-onLight/10 rounded-2xl rounded-bl-sm px-3.5 py-2.5 text-sm text-onLight/80">
+              <div className="max-w-[85%] bg-surface border border-onLight/10 rounded-2xl rounded-bl-sm px-3.5 py-2.5 text-sm text-onLight/80">
                 {GREETING}
               </div>
               {messages.map((m, i) => (
@@ -76,7 +76,7 @@ export default function ChatWidget() {
                   key={i}
                   className={cn('max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm', {
                     'ml-auto bg-leaf text-white rounded-br-sm': m.role === 'user',
-                    'bg-white border border-onLight/10 text-onLight/80 rounded-bl-sm':
+                    'bg-surface border border-onLight/10 text-onLight/80 rounded-bl-sm':
                       m.role === 'assistant',
                   })}
                 >
@@ -84,7 +84,7 @@ export default function ChatWidget() {
                 </div>
               ))}
               {loading && (
-                <div className="bg-white border border-onLight/10 rounded-2xl rounded-bl-sm px-3.5 py-2.5 text-sm text-onLight/40 w-fit">
+                <div className="bg-surface border border-onLight/10 rounded-2xl rounded-bl-sm px-3.5 py-2.5 text-sm text-onLight/40 w-fit">
                   Thinking…
                 </div>
               )}

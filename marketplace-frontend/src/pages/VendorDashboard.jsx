@@ -147,7 +147,7 @@ export default function VendorDashboard() {
               onClick={a.onClick}
               title={a.locked ? "Unlocks once you're verified" : undefined}
               className={cn(
-                'text-left p-6 rounded-2xl border bg-white flex flex-col items-start gap-4',
+                'text-left p-6 rounded-2xl border bg-surface flex flex-col items-start gap-4',
                 a.locked
                   ? 'opacity-50 border-onLight/10 cursor-not-allowed'
                   : 'border-onLight/10 hover:border-leaf/40 cursor-pointer',
@@ -167,7 +167,7 @@ export default function VendorDashboard() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             onSubmit={handleCreate}
-            className="mt-6 bg-white border border-onLight/10 rounded-2xl p-6 max-w-xl relative"
+            className="mt-6 bg-surface border border-onLight/10 rounded-2xl p-6 max-w-xl relative"
           >
             <button
               type="button"
@@ -213,7 +213,7 @@ export default function VendorDashboard() {
                   value={form.description}
                   onChange={(e) => update('description', e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl border border-onLight/15 bg-white text-sm outline-none focus:border-leaf focus:ring-1 focus:ring-leaf"
+                  className="w-full px-4 py-3 rounded-xl border border-onLight/15 bg-surface text-sm outline-none focus:border-leaf focus:ring-1 focus:ring-leaf"
                 />
               </Field>
               <Field label="Image URL (optional)" hint="Leave blank to use a category icon for now">
@@ -238,7 +238,7 @@ export default function VendorDashboard() {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {vendorProducts.map((p) => (
-                <div key={p.id} className="bg-white border border-onLight/10 rounded-2xl overflow-hidden">
+                <div key={p.id} className="bg-surface border border-onLight/10 rounded-2xl overflow-hidden">
                   <div className="aspect-[4/3]">
                     <ProductThumb product={p} />
                   </div>
