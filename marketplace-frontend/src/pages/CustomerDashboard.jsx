@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import { addToCart, fetchProducts, fetchCart, fetchOrders } from '@/store/slices/catalogSlice'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/components/ToastProvider'
 import ProductThumb from '@/components/ProductThumb'
 import PriceTag from '@/components/PriceTag'
 
@@ -15,9 +16,15 @@ export default function CustomerDashboard() {
   const user = useSelector((s) => s.auth.user)
   const products = useSelector((s) => s.catalog.products)
   const catalogStatus = useSelector((s) => s.catalog.status)
+  const catalogError = useSelector((s) => s.catalog.error)
   const cart = useSelector((s) => s.catalog.cart)
+  const cartStatus = useSelector((s) => s.catalog.cartStatus)
+  const cartError = useSelector((s) => s.catalog.cartError)
   const orders = useSelector((s) => s.catalog.orders)
+  const ordersStatus = useSelector((s) => s.catalog.ordersStatus)
+  const ordersError = useSelector((s) => s.catalog.ordersError)
   const dispatch = useDispatch()
+  const { showToast } = useToast()
   const [tab, setTab] = useState('For You')
   const [loading, setLoading] = useState(true)
 
@@ -27,6 +34,12 @@ export default function CustomerDashboard() {
     Promise.all(tasks).finally(() => setLoading(false))
     // Intentionally mount-only — including catalogStatus here would refetch every time it changes.
   }, [dispatch])
+
+  function handleAdd(productId) {
+    dispatch(addToCart(productId))
+      .unwrap()
+      .catch((message) => showToast(message || 'Could not add that to your cart', 'error'))
+  }
 
   const interests = user?.personalizationProfile?.interests || []
 
@@ -71,6 +84,11 @@ export default function CustomerDashboard() {
           {tab === 'For You' && (
             loading ? (
               <EmptyState text="Loading your feed…" />
+            ) : catalogStatus === 'failed' ? (
+              <FailedState
+                text={catalogError || "Couldn't load products."}
+                onRetry={() => dispatch(fetchProducts())}
+              />
             ) : (
               <motion.div
                 key="feed"
@@ -80,7 +98,7 @@ export default function CustomerDashboard() {
                 className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"
               >
                 {feed.map((p) => (
-                  <ProductCard key={p.id} product={p} onAdd={() => dispatch(addToCart(p.id))} />
+                  <ProductCard key={p.id} product={p} onAdd={() => handleAdd(p.id)} />
                 ))}
               </motion.div>
             )
@@ -90,6 +108,11 @@ export default function CustomerDashboard() {
             <motion.div key="cart" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               {loading ? (
                 <EmptyState text="Loading your cart…" />
+              ) : cartStatus === 'failed' ? (
+                <FailedState
+                  text={cartError || "Couldn't load your cart."}
+                  onRetry={() => dispatch(fetchCart())}
+                />
               ) : cart.length === 0 ? (
                 <EmptyState text="Your cart is empty. Add something you actually want." />
               ) : (
@@ -119,6 +142,11 @@ export default function CustomerDashboard() {
             <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               {loading ? (
                 <EmptyState text="Loading your orders…" />
+              ) : ordersStatus === 'failed' ? (
+                <FailedState
+                  text={ordersError || "Couldn't load your orders."}
+                  onRetry={() => dispatch(fetchOrders())}
+                />
               ) : orders.length === 0 ? (
                 <EmptyState text="No orders yet. Once you check out, they'll show up here." />
               ) : (
@@ -190,6 +218,20 @@ function EmptyState({ text }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24 text-onLight/45 text-sm">
       {text}
+    </motion.div>
+  )
+}
+
+function FailedState({ text, onRetry }) {
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24">
+      <p className="text-sm text-coral mb-3">{text}</p>
+      <button
+        onClick={onRetry}
+        className="text-xs font-medium bg-onLight/5 hover:bg-onLight/10 text-onLight/70 rounded-full px-4 py-2 transition-colors"
+      >
+        Try again
+      </button>
     </motion.div>
   )
 }

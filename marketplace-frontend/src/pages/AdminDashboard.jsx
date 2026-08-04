@@ -11,6 +11,8 @@ import {
   toggleFeaturedCategory,
   fetchAdminDashboard,
 } from '@/store/slices/adminSlice'
+import { useToast } from '@/components/ToastProvider'
+import FormError from '@/components/ui/FormError'
 import { cn } from '@/lib/utils'
 
 const sections = ['Vendor Queue', 'Approved Vendors', 'Customer Queue', 'Activity Log', 'Dashboard Curation']
@@ -25,6 +27,7 @@ export default function AdminDashboard() {
   const [section, setSection] = useState(sections[0])
   const [rejectingId, setRejectingId] = useState(null)
   const [reason, setReason] = useState('')
+  const { showToast } = useToast()
 
   const allCategories = ['Electronics', 'Fashion', 'Home', 'Beauty', 'Books', 'Sports']
 
@@ -42,8 +45,23 @@ export default function AdminDashboard() {
 
   function submitReject(id) {
     dispatch(rejectVendor({ id, reason: reason || 'Did not meet eligibility criteria.' }))
+      .unwrap()
+      .catch((message) => showToast(message || 'Could not reject that vendor', 'error'))
     setRejectingId(null)
     setReason('')
+  }
+
+  function submitApprove(id) {
+    dispatch(approveVendor(id))
+      .unwrap()
+      .then(() => showToast('Vendor approved', 'success'))
+      .catch((message) => showToast(message || 'Could not approve that vendor', 'error'))
+  }
+
+  function handleToggleFeatured(category) {
+    dispatch(toggleFeaturedCategory(category))
+      .unwrap()
+      .catch((message) => showToast(message || 'Could not update featured categories', 'error'))
   }
 
   return (
@@ -69,7 +87,7 @@ export default function AdminDashboard() {
           {status === 'loading' && (
             <p className="text-sm text-onLight/45 mb-4">Loading admin data…</p>
           )}
-          {error && <p className="text-sm text-coral mb-4">{error}</p>}
+          <FormError className="mb-4">{error}</FormError>
 
           {section === 'Vendor Queue' && (
             <div className="flex flex-col gap-4">
@@ -93,7 +111,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => dispatch(approveVendor(v.id))}
+                          onClick={() => submitApprove(v.id)}
                           className="flex items-center gap-1.5 text-xs font-medium bg-emerald/15 text-emerald rounded-full px-3 py-2"
                         >
                           <Check size={14} /> Approve
@@ -203,7 +221,7 @@ export default function AdminDashboard() {
                 {allCategories.map((c) => (
                   <button
                     key={c}
-                    onClick={() => dispatch(toggleFeaturedCategory(c))}
+                    onClick={() => handleToggleFeatured(c)}
                     className={cn(
                       'px-4 py-2 rounded-full text-sm border transition-colors',
                       (dashboardCuration.featuredCategories || []).includes(c)

@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import PageBackdrop from '@/components/PageBackdrop'
 import { addToCart, fetchProducts } from '@/store/slices/catalogSlice'
+import { useToast } from '@/components/ToastProvider'
 import ProductThumb from '@/components/ProductThumb'
 import PriceTag from '@/components/PriceTag'
 
@@ -14,7 +15,9 @@ export default function ProductsBrowse() {
   const products = useSelector((s) => s.catalog.products)
   const isAuthenticated = useSelector((s) => s.auth.isAuthenticated)
   const catalogStatus = useSelector((s) => s.catalog.status)
+  const catalogError = useSelector((s) => s.catalog.error)
   const dispatch = useDispatch()
+  const { showToast } = useToast()
   const [params, setParams] = useSearchParams()
   const category = params.get('category')
   const filtered = category ? products.filter((p) => p.category === category) : products
@@ -41,7 +44,15 @@ export default function ProductsBrowse() {
           <p className="text-sm text-onLight/45 mb-6">Loading products…</p>
         )}
         {catalogStatus === 'failed' && products.length === 0 && (
-          <p className="text-sm text-coral mb-6">Could not load products. Is the backend running on :8080?</p>
+          <div className="mb-6">
+            <p className="text-sm text-coral mb-2">{catalogError || "Couldn't load products."}</p>
+            <button
+              onClick={() => dispatch(fetchProducts(category || undefined))}
+              className="text-xs font-medium bg-onLight/5 hover:bg-onLight/10 text-onLight/70 rounded-full px-4 py-2 transition-colors"
+            >
+              Try again
+            </button>
+          </div>
         )}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((p, i) => {
@@ -70,6 +81,8 @@ export default function ProductsBrowse() {
                         return
                       }
                       dispatch(addToCart(p.id))
+                        .unwrap()
+                        .catch((message) => showToast(message || 'Could not add that to your cart', 'error'))
                     }}
                     className="shrink-0 text-xs font-medium bg-ink text-white rounded-full px-3 py-1.5 hover:bg-black"
                   >

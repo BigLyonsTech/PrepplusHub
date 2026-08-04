@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
 import ProgressBar from '@/components/ui/ProgressBar'
+import FormError from '@/components/ui/FormError'
 import { completePersonalization } from '@/store/slices/authSlice'
 import { cn } from '@/lib/utils'
 
@@ -153,7 +154,7 @@ export default function CustomerOnboardingQuiz() {
             )}
           </AnimatePresence>
 
-          {error && <p className="text-sm text-coral mt-4">{error}</p>}
+          <FormError className="mt-4">{error}</FormError>
 
           <div className="flex justify-between mt-10">
             <button

@@ -6,6 +6,7 @@ import { ShoppingBag, Store } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
+import FormError from '@/components/ui/FormError'
 import { confirmRole } from '@/store/slices/authSlice'
 import { cn } from '@/lib/utils'
 
@@ -76,7 +77,7 @@ export default function RoleConfirmation() {
           ))}
         </div>
 
-        {error && <p className="text-sm text-coral mt-6">{error}</p>}
+        <FormError className="mt-6">{error}</FormError>
 
         <Button size="lg" className="mt-10" onClick={handleContinue} disabled={loading}>
           {loading ? 'Saving…' : `Continue as ${role === 'customer' ? 'Customer' : 'Vendor'}`}

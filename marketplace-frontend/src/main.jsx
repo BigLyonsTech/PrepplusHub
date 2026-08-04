@@ -6,6 +6,8 @@ import { store } from './store'
 import { fetchMe } from './store/slices/authSlice'
 import { fetchProducts } from './store/slices/catalogSlice'
 import { getToken } from './lib/api'
+import { ToastProvider } from './components/ToastProvider'
+import ErrorBoundary from './components/ErrorBoundary'
 import App from './App.jsx'
 import './index.css'
 
@@ -17,10 +19,14 @@ store.dispatch(fetchProducts())
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <Provider store={store}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </Provider>
+    <ErrorBoundary>
+      <Provider store={store}>
+        <BrowserRouter>
+          <ToastProvider>
+            <App />
+          </ToastProvider>
+        </BrowserRouter>
+      </Provider>
+    </ErrorBoundary>
   </React.StrictMode>,
 )

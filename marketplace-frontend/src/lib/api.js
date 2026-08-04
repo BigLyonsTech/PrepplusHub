@@ -15,6 +15,8 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY)
 }
 
+const REQUEST_TIMEOUT_MS = 15000
+
 async function request(path, options = {}) {
   const headers = {
     'Content-Type': 'application/json',
@@ -23,10 +25,28 @@ async function request(path, options = {}) {
   const token = getToken()
   if (token) headers.Authorization = `Bearer ${token}`
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-  })
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+
+  let res
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    })
+  } catch (e) {
+    const err = new Error(
+      e.name === 'AbortError'
+        ? 'The request timed out. Please check your connection and try again.'
+        : 'Unable to reach the server. Please check your connection and try again.',
+    )
+    err.status = 0
+    err.network = true
+    throw err
+  } finally {
+    clearTimeout(timeout)
+  }
 
   let data = null
   const text = await res.text()

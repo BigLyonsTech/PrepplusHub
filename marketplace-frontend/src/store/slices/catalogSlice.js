@@ -148,9 +148,13 @@ const initialState = {
   vendorProducts: [],
   vendorProductsStatus: 'idle',
   cart: [],
+  cartStatus: 'idle',
+  cartError: null,
   productReviews: [],
   vendorReviews: [],
   orders: [],
+  ordersStatus: 'idle',
+  ordersError: null,
   status: 'idle',
   error: null,
 }
@@ -208,8 +212,17 @@ const catalogSlice = createSlice({
         replaceIn(state.vendorProducts)
         replaceIn(state.products)
       })
+      .addCase(fetchCart.pending, (state) => {
+        state.cartStatus = 'loading'
+        state.cartError = null
+      })
       .addCase(fetchCart.fulfilled, (state, action) => {
+        state.cartStatus = 'succeeded'
         state.cart = action.payload || []
+      })
+      .addCase(fetchCart.rejected, (state, action) => {
+        state.cartStatus = 'failed'
+        state.cartError = action.payload || 'Failed to load your cart'
       })
       .addCase(addToCart.fulfilled, (state, action) => {
         state.cart = action.payload || []
@@ -220,8 +233,17 @@ const catalogSlice = createSlice({
       .addCase(clearCart.fulfilled, (state, action) => {
         state.cart = action.payload || []
       })
+      .addCase(fetchOrders.pending, (state) => {
+        state.ordersStatus = 'loading'
+        state.ordersError = null
+      })
       .addCase(fetchOrders.fulfilled, (state, action) => {
+        state.ordersStatus = 'succeeded'
         state.orders = action.payload || []
+      })
+      .addCase(fetchOrders.rejected, (state, action) => {
+        state.ordersStatus = 'failed'
+        state.ordersError = action.payload || 'Failed to load your orders'
       })
       .addCase(checkout.fulfilled, (state, action) => {
         state.cart = []

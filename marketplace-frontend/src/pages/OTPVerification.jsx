@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
+import FormError from '@/components/ui/FormError'
 import { verifyOtp } from '@/store/slices/authSlice'
 import { api } from '@/lib/api'
 import { routeForUser } from '@/lib/routing'
@@ -96,9 +97,7 @@ export default function OTPVerification() {
               />
             ))}
           </div>
-          {(error || authError) && (
-            <p className="text-sm text-coral mb-3">{error || authError}</p>
-          )}
+          <FormError className="mb-3">{error || authError}</FormError>
           {info && <p className="text-sm text-leaf mb-3">{info}</p>}
           <Button type="submit" size="lg" className="w-full" disabled={status === 'loading'}>
             {status === 'loading' ? 'Verifying…' : 'Verify'}

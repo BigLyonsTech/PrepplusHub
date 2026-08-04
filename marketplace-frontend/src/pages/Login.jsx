@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
 import { Field, Input } from '@/components/ui/Input'
+import FormError from '@/components/ui/FormError'
 import { loginUser } from '@/store/slices/authSlice'
 import { routeForUser } from '@/lib/routing'
 
@@ -65,9 +66,7 @@ export default function Login() {
               />
             </Field>
           </div>
-          {(localError || authError) && (
-            <p className="text-sm text-coral mt-4">{localError || authError}</p>
-          )}
+          <FormError className="mt-4">{localError || authError}</FormError>
           <Button type="submit" size="lg" className="w-full mt-8" disabled={status === 'loading'}>
             {status === 'loading' ? 'Signing in…' : 'Log in'}
           </Button>

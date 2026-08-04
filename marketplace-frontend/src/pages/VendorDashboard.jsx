@@ -8,6 +8,7 @@ import PageBackdrop from '@/components/PageBackdrop'
 import Reveal from '@/components/Reveal'
 import Button from '@/components/ui/Button'
 import { Field, Input, Select } from '@/components/ui/Input'
+import FormError from '@/components/ui/FormError'
 import ProductThumb from '@/components/ProductThumb'
 import PriceTag from '@/components/PriceTag'
 import { fetchVendorProducts, createProduct } from '@/store/slices/catalogSlice'
@@ -220,7 +221,7 @@ export default function VendorDashboard() {
                 <Input value={form.image} onChange={(e) => update('image', e.target.value)} placeholder="https://…" />
               </Field>
             </div>
-            {error && <p className="text-sm text-coral mt-4">{error}</p>}
+            <FormError className="mt-4">{error}</FormError>
             <Button type="submit" size="lg" className="w-full mt-6" disabled={saving}>
               {saving ? 'Adding…' : 'Add product'}
             </Button>
@@ -233,6 +234,16 @@ export default function VendorDashboard() {
             <p className="text-sm text-onLight/45">Your products will show up here once you're verified.</p>
           ) : vendorProductsStatus === 'loading' ? (
             <p className="text-sm text-onLight/45">Loading your products…</p>
+          ) : vendorProductsStatus === 'failed' ? (
+            <div>
+              <p className="text-sm text-coral mb-2">Couldn't load your products.</p>
+              <button
+                onClick={() => dispatch(fetchVendorProducts(user.id))}
+                className="text-xs font-medium bg-onLight/5 hover:bg-onLight/10 text-onLight/70 rounded-full px-4 py-2 transition-colors"
+              >
+                Try again
+              </button>
+            </div>
           ) : vendorProducts.length === 0 ? (
             <p className="text-sm text-onLight/45">You haven't listed any products yet.</p>
           ) : (

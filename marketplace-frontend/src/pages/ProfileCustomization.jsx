@@ -6,6 +6,7 @@ import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
 import { Field, Input } from '@/components/ui/Input'
 import { updateProfile } from '@/store/slices/authSlice'
+import { useToast } from '@/components/ToastProvider'
 import { cn } from '@/lib/utils'
 
 const accents = ['#3FBF6B', '#123D0A', '#2E7D5B', '#E0A030']
@@ -24,6 +25,7 @@ export default function ProfileCustomization() {
   const [social, setSocial] = useState(existing.socialLink || '')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const { showToast } = useToast()
 
   async function handleSave() {
     setSaving(true)
@@ -39,7 +41,11 @@ export default function ProfileCustomization() {
       }),
     )
     setSaving(false)
-    setMessage(updateProfile.fulfilled.match(result) ? 'Saved.' : result.payload || 'Save failed')
+    if (updateProfile.fulfilled.match(result)) {
+      setMessage('Saved.')
+    } else {
+      showToast(result.payload || 'Could not save your changes', 'error')
+    }
   }
 
   return (

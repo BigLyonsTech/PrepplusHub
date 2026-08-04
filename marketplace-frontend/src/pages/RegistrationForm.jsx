@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
 import { Field, Input, Select } from '@/components/ui/Input'
+import FormError from '@/components/ui/FormError'
 import { registerUser } from '@/store/slices/authSlice'
 import { ShieldCheck } from 'lucide-react'
 
@@ -155,9 +156,7 @@ export default function RegistrationForm() {
             <span className="text-sm text-onLight/70">I&apos;m not a robot</span>
           </label>
           {errors.captcha && <span className="block text-xs text-coral mt-1.5">{errors.captcha}</span>}
-          {(authError || errors.submit) && (
-            <p className="text-sm text-coral mt-4">{authError || errors.submit}</p>
-          )}
+          <FormError className="mt-4">{authError || errors.submit}</FormError>
 
           <Button type="submit" size="lg" className="w-full mt-8" disabled={status === 'loading'}>
             {status === 'loading' ? 'Creating account…' : 'Continue'}

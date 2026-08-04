@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
 import { Field, Input, Select } from '@/components/ui/Input'
+import FormError from '@/components/ui/FormError'
 import { submitVendorEligibility } from '@/store/slices/authSlice'
 
 const categories = ['Fashion & Accessories', 'Electronics', 'Home & Living', 'Beauty', 'Food & Groceries']
@@ -163,7 +164,7 @@ export default function VendorEligibilityFlow() {
             </Field>
           </div>
 
-          {error && <p className="text-sm text-coral mt-4">{error}</p>}
+          <FormError className="mt-4">{error}</FormError>
 
           <Button type="submit" size="lg" className="w-full mt-8" disabled={loading}>
             {loading ? 'Submitting…' : 'Submit for review'}

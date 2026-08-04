@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
 import { Field, Input } from '@/components/ui/Input'
+import FormError from '@/components/ui/FormError'
 import ProgressBar from '@/components/ui/ProgressBar'
 import { checkout, fetchCart, fetchProducts } from '@/store/slices/catalogSlice'
 
@@ -140,7 +141,7 @@ export default function CheckoutFlow() {
                     )
                   })}
                 </div>
-                {error && <p className="text-sm text-coral mt-4">{error}</p>}
+                <FormError className="mt-4">{error}</FormError>
               </motion.div>
             )}
           </AnimatePresence>

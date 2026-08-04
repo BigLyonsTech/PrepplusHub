@@ -18,6 +18,8 @@ import {
 } from '@/store/slices/catalogSlice'
 import ProductThumb from '@/components/ProductThumb'
 import PriceTag from '@/components/PriceTag'
+import FormError from '@/components/ui/FormError'
+import { useToast } from '@/components/ToastProvider'
 import { cn } from '@/lib/utils'
 
 export default function ProductDetailPage() {
@@ -38,6 +40,7 @@ export default function ProductDetailPage() {
   const [comment, setComment] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const { showToast } = useToast()
 
   useEffect(() => {
     setLoading(true)
@@ -53,28 +56,30 @@ export default function ProductDetailPage() {
     }
   }, [dispatch, product?.vendorId])
 
-  async function submitVendorReview(e) {
+  function submitVendorReview(e) {
     e.preventDefault()
     if (!isAuthenticated) {
       setError('Log in to leave a review.')
       return
     }
     setError('')
-    await dispatch(
-      addVendorReview({ vendorId: product.vendorId, rating, comment, orderId: 'n/a' }),
-    )
-    setComment('')
+    dispatch(addVendorReview({ vendorId: product.vendorId, rating, comment, orderId: 'n/a' }))
+      .unwrap()
+      .then(() => setComment(''))
+      .catch((message) => showToast(message || 'Could not submit your review', 'error'))
   }
 
-  async function submitProductReview(e) {
+  function submitProductReview(e) {
     e.preventDefault()
     if (!isAuthenticated) {
       setError('Log in to leave a review.')
       return
     }
     setError('')
-    await dispatch(addProductReview({ productId: product.id, rating, comment }))
-    setComment('')
+    dispatch(addProductReview({ productId: product.id, rating, comment }))
+      .unwrap()
+      .then(() => setComment(''))
+      .catch((message) => showToast(message || 'Could not submit your review', 'error'))
   }
 
   if (loading && !product) {
@@ -134,12 +139,14 @@ export default function ProductDetailPage() {
                     return
                   }
                   dispatch(addToCart(product.id))
+                    .unwrap()
+                    .catch((message) => showToast(message || 'Could not add that to your cart', 'error'))
                 }}
               >
                 Add to cart
               </Button>
             </div>
-            {error && <p className="text-sm text-coral mt-4">{error}</p>}
+            <FormError className="mt-4">{error}</FormError>
           </motion.div>
         </div>
 
