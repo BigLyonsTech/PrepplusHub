@@ -25,10 +25,9 @@ export default function Logo3D({ size = 30 }) {
         whileHover={{ scale: 1.08 }}
       >
         <span
-          className={faceBase}
+          className={`${faceBase} text-ink dark:text-white`}
           style={{
             background: 'linear-gradient(135deg, var(--color-leaf), var(--color-leaf-dim))',
-            color: 'var(--color-ink)',
           }}
         >
           P
@@ -38,7 +37,7 @@ export default function Logo3D({ size = 30 }) {
           style={{
             transform: 'rotateY(180deg)',
             background: 'linear-gradient(135deg, var(--color-canopy), var(--color-ink))',
-            color: 'var(--color-paper)',
+            color: 'var(--color-onDark)',
           }}
         >
           P
