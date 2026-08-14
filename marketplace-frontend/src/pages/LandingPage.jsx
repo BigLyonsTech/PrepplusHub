@@ -163,7 +163,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <CategoryShowcase />
+      <CategoryShowcase products={products} />
 
       <FlashSaleBanner />
 
