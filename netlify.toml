@@ -3,6 +3,9 @@
   command = "npm run build"
   publish = "dist"
 
+[build.environment]
+  VITE_CLOUDINARY_CLOUD_NAME = "fsqiu2ll"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

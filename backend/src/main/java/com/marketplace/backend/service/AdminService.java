@@ -4,9 +4,11 @@ import com.marketplace.backend.dto.RejectRequest;
 import com.marketplace.backend.exception.ApiException;
 import com.marketplace.backend.model.ActivityLog;
 import com.marketplace.backend.model.PlatformSettings;
+import com.marketplace.backend.model.Product;
 import com.marketplace.backend.model.User;
 import com.marketplace.backend.repository.ActivityLogRepository;
 import com.marketplace.backend.repository.PlatformSettingsRepository;
+import com.marketplace.backend.repository.ProductRepository;
 import com.marketplace.backend.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,17 +25,20 @@ public class AdminService {
     private final UserRepository userRepository;
     private final ActivityLogRepository activityLogRepository;
     private final PlatformSettingsRepository platformSettingsRepository;
+    private final ProductRepository productRepository;
     private final ActivityService activityService;
 
     public AdminService(
             UserRepository userRepository,
             ActivityLogRepository activityLogRepository,
             PlatformSettingsRepository platformSettingsRepository,
+            ProductRepository productRepository,
             ActivityService activityService
     ) {
         this.userRepository = userRepository;
         this.activityLogRepository = activityLogRepository;
         this.platformSettingsRepository = platformSettingsRepository;
+        this.productRepository = productRepository;
         this.activityService = activityService;
     }
 
@@ -92,6 +97,13 @@ public class AdminService {
         userRepository.save(vendor);
         activityService.log(adminId, "vendor_rejected", Map.of("vendorId", vendorUserId, "reason", request.getReason()));
         return vendor;
+    }
+
+    public Product setProductActive(String productId, boolean active) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ApiException("Product not found", HttpStatus.NOT_FOUND));
+        product.setActive(active);
+        return productRepository.save(product);
     }
 
     public PlatformSettings toggleFeaturedCategory(String category) {
