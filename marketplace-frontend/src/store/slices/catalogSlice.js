@@ -90,6 +90,36 @@ export const fetchOrders = createAsyncThunk('catalog/fetchOrders', async (_, { r
   }
 })
 
+export const fetchOrder = createAsyncThunk('catalog/fetchOrder', async (id, { rejectWithValue }) => {
+  try {
+    return await api.getOrder(id)
+  } catch (e) {
+    return rejectWithValue(e.message)
+  }
+})
+
+export const fetchVendorOrders = createAsyncThunk(
+  'catalog/fetchVendorOrders',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await api.getVendorOrders()
+    } catch (e) {
+      return rejectWithValue(e.message)
+    }
+  },
+)
+
+export const updateOrderStatus = createAsyncThunk(
+  'catalog/updateOrderStatus',
+  async ({ id, status }, { rejectWithValue }) => {
+    try {
+      return await api.updateOrderStatus(id, status)
+    } catch (e) {
+      return rejectWithValue(e.message)
+    }
+  },
+)
+
 export const checkout = createAsyncThunk('catalog/checkout', async (body, { rejectWithValue }) => {
   try {
     return await api.checkout(body)
@@ -155,8 +185,19 @@ const initialState = {
   orders: [],
   ordersStatus: 'idle',
   ordersError: null,
+  currentOrder: null,
+  orderStatus: 'idle',
+  orderError: null,
+  vendorOrders: [],
+  vendorOrdersStatus: 'idle',
+  vendorOrdersError: null,
   status: 'idle',
   error: null,
+}
+
+function replaceOrderIn(list, order) {
+  const idx = list.findIndex((o) => o.id === order.id)
+  if (idx >= 0) list[idx] = order
 }
 
 const catalogSlice = createSlice({
@@ -244,6 +285,35 @@ const catalogSlice = createSlice({
       .addCase(fetchOrders.rejected, (state, action) => {
         state.ordersStatus = 'failed'
         state.ordersError = action.payload || 'Failed to load your orders'
+      })
+      .addCase(fetchOrder.pending, (state) => {
+        state.orderStatus = 'loading'
+        state.orderError = null
+      })
+      .addCase(fetchOrder.fulfilled, (state, action) => {
+        state.orderStatus = 'succeeded'
+        state.currentOrder = action.payload
+      })
+      .addCase(fetchOrder.rejected, (state, action) => {
+        state.orderStatus = 'failed'
+        state.orderError = action.payload || 'Failed to load this order'
+      })
+      .addCase(fetchVendorOrders.pending, (state) => {
+        state.vendorOrdersStatus = 'loading'
+        state.vendorOrdersError = null
+      })
+      .addCase(fetchVendorOrders.fulfilled, (state, action) => {
+        state.vendorOrdersStatus = 'succeeded'
+        state.vendorOrders = action.payload || []
+      })
+      .addCase(fetchVendorOrders.rejected, (state, action) => {
+        state.vendorOrdersStatus = 'failed'
+        state.vendorOrdersError = action.payload || 'Failed to load your orders'
+      })
+      .addCase(updateOrderStatus.fulfilled, (state, action) => {
+        replaceOrderIn(state.vendorOrders, action.payload)
+        replaceOrderIn(state.orders, action.payload)
+        if (state.currentOrder?.id === action.payload.id) state.currentOrder = action.payload
       })
       .addCase(checkout.fulfilled, (state, action) => {
         state.cart = []

@@ -24,6 +24,8 @@ const ProductsBrowse = lazy(() => import('./pages/ProductsBrowse'))
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'))
 const CheckoutFlow = lazy(() => import('./pages/CheckoutFlow'))
 const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'))
+const OrderTrackingPage = lazy(() => import('./pages/OrderTrackingPage'))
+const VendorOrdersPage = lazy(() => import('./pages/VendorOrdersPage'))
 
 export default function App() {
   const location = useLocation()
@@ -65,6 +67,10 @@ export default function App() {
 
             {/* 13. Checkout */}
             <Route path="/checkout" element={<CheckoutFlow />} />
+
+            {/* Order tracking + vendor order management */}
+            <Route path="/orders/:id" element={<OrderTrackingPage />} />
+            <Route path="/vendor/orders" element={<VendorOrdersPage />} />
 
             {/* 14. Terms */}
             <Route path="/terms" element={<TermsAndConditions />} />

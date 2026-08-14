@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { motion } from 'framer-motion'
 import { Lock, PlusCircle, Wallet, Package, X } from 'lucide-react'
@@ -19,6 +19,7 @@ const categories = Object.keys(CATEGORY_TINTS).filter((c) => c !== 'default')
 
 export default function VendorDashboard() {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   const user = useSelector((s) => s.auth.user)
   const vendorProducts = useSelector((s) => s.catalog.vendorProducts)
   const vendorProductsStatus = useSelector((s) => s.catalog.vendorProductsStatus)
@@ -71,7 +72,7 @@ export default function VendorDashboard() {
   const actions = [
     { icon: PlusCircle, label: 'Add a product', locked: !verified, onClick: () => setShowForm(true) },
     { icon: Wallet, label: 'View payouts', locked: !verified },
-    { icon: Package, label: 'Manage orders', locked: !verified },
+    { icon: Package, label: 'Manage orders', locked: !verified, onClick: () => navigate('/vendor/orders') },
   ]
 
   const statusBadge = {

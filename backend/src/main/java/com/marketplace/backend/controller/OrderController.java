@@ -1,6 +1,7 @@
 package com.marketplace.backend.controller;
 
 import com.marketplace.backend.dto.CheckoutRequest;
+import com.marketplace.backend.dto.UpdateOrderStatusRequest;
 import com.marketplace.backend.model.Order;
 import com.marketplace.backend.security.SecurityUtils;
 import com.marketplace.backend.service.OrderService;
@@ -24,8 +25,23 @@ public class OrderController {
         return orderService.listMine(SecurityUtils.requireUserId());
     }
 
+    @GetMapping("/{id}")
+    public Order get(@PathVariable String id) {
+        return orderService.getOrderForCustomer(SecurityUtils.requireUserId(), id);
+    }
+
+    @GetMapping("/vendor/mine")
+    public List<Order> vendorOrders() {
+        return orderService.listForVendor(SecurityUtils.requireUserId());
+    }
+
     @PostMapping("/checkout")
     public Order checkout(@Valid @RequestBody CheckoutRequest request) {
         return orderService.checkout(SecurityUtils.requireUserId(), request);
+    }
+
+    @PatchMapping("/{id}/status")
+    public Order updateStatus(@PathVariable String id, @Valid @RequestBody UpdateOrderStatusRequest request) {
+        return orderService.updateStatus(SecurityUtils.requireUserId(), id, request.getStatus());
     }
 }

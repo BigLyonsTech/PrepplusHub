@@ -12,6 +12,22 @@ import PriceTag from '@/components/PriceTag'
 
 const tabs = ['For You', 'Cart', 'Orders']
 
+const STATUS_LABELS = {
+  PROCESSING: 'Processing',
+  SHIPPED: 'Shipped',
+  OUT_FOR_DELIVERY: 'Out for delivery',
+  DELIVERED: 'Delivered',
+  CANCELLED: 'Cancelled',
+}
+
+const STATUS_BADGE = {
+  PROCESSING: 'bg-amber/15 text-amber',
+  SHIPPED: 'bg-leaf/15 text-leaf-dim',
+  OUT_FOR_DELIVERY: 'bg-leaf/15 text-leaf-dim',
+  DELIVERED: 'bg-emerald/15 text-emerald',
+  CANCELLED: 'bg-coral/15 text-coral',
+}
+
 export default function CustomerDashboard() {
   const user = useSelector((s) => s.auth.user)
   const products = useSelector((s) => s.catalog.products)
@@ -156,24 +172,21 @@ export default function CustomerDashboard() {
                     const title = first?.productName || products.find((p) => p.id === first?.productId)?.name || `Order ${o.id}`
                     const qty = o.items?.reduce((s, i) => s + i.quantity, 0) || 0
                     return (
-                      <div key={o.id} className="flex justify-between items-center bg-surface border border-onLight/10 rounded-xl p-4">
+                      <Link
+                        key={o.id}
+                        to={`/orders/${o.id}`}
+                        className="flex justify-between items-center bg-surface border border-onLight/10 rounded-xl p-4 hover:border-leaf/30 transition-colors"
+                      >
                         <div>
                           <div className="font-medium text-sm">{title}{o.items?.length > 1 ? ` +${o.items.length - 1}` : ''}</div>
                           <div className="text-xs text-onLight/45">
                             Qty {qty} · ₦{(o.total || 0).toLocaleString()} · {new Date(o.placedAt).toLocaleDateString()}
                           </div>
                         </div>
-                        <span
-                          className={cn(
-                            'text-xs font-medium rounded-full px-3 py-1.5',
-                            o.status === 'Delivered' && 'bg-emerald/15 text-emerald',
-                            o.status === 'In transit' && 'bg-leaf/15 text-leaf-dim',
-                            o.status === 'Processing' && 'bg-amber/15 text-amber',
-                          )}
-                        >
-                          {o.status}
+                        <span className={cn('text-xs font-medium rounded-full px-3 py-1.5', STATUS_BADGE[o.status])}>
+                          {STATUS_LABELS[o.status] || o.status}
                         </span>
-                      </div>
+                      </Link>
                     )
                   })}
                 </div>

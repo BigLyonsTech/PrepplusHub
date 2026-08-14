@@ -102,7 +102,11 @@ export const api = {
 
   // Orders
   getOrders: () => request('/orders'),
+  getOrder: (id) => request(`/orders/${id}`),
+  getVendorOrders: () => request('/orders/vendor/mine'),
   checkout: (body) => request('/orders/checkout', { method: 'POST', body: JSON.stringify(body) }),
+  updateOrderStatus: (id, status) =>
+    request(`/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
 
   // Reviews
   getProductReviews: (productId) => request(`/reviews/products/${productId}`),
