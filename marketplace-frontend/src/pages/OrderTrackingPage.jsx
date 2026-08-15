@@ -7,6 +7,7 @@ import Footer from '@/components/Footer'
 import PageBackdrop from '@/components/PageBackdrop'
 import Reveal from '@/components/Reveal'
 import OrderStatusStepper from '@/components/OrderStatusStepper'
+import DeliveryMap from '@/components/DeliveryMap'
 import { fetchOrder } from '@/store/slices/catalogSlice'
 
 export default function OrderTrackingPage() {
@@ -72,6 +73,9 @@ export default function OrderTrackingPage() {
                   <div className="text-onLight/65 mt-0.5">{addr?.address}</div>
                   <div className="text-onLight/45 mt-0.5">{addr?.phone}</div>
                 </div>
+              </div>
+              <div className="mt-4 h-56">
+                <DeliveryMap lat={addr?.lat} lng={addr?.lng} label={addr?.fullName} />
               </div>
             </div>
 

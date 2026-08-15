@@ -5,6 +5,7 @@
 
 [build.environment]
   VITE_CLOUDINARY_CLOUD_NAME = "fsqiu2ll"
+  VITE_GOOGLE_MAPS_API_KEY = "AIzaSyBY1ezTi7vc8qgIBdnmjg3PT7DH2WaVhuk"
 
 [[redirects]]
   from = "/*"
