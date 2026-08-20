@@ -20,6 +20,7 @@ public class Order {
     private double total;
     private OrderStatus status;
     private List<StatusEvent> statusHistory = new ArrayList<>();
+    private FulfillmentType fulfillmentType = FulfillmentType.DELIVERY;
     private DeliveryAddress deliveryAddress;
     private Instant placedAt = Instant.now();
 
@@ -90,6 +91,8 @@ public class Order {
     public void setStatus(OrderStatus status) { this.status = status; }
     public List<StatusEvent> getStatusHistory() { return statusHistory; }
     public void setStatusHistory(List<StatusEvent> statusHistory) { this.statusHistory = statusHistory; }
+    public FulfillmentType getFulfillmentType() { return fulfillmentType; }
+    public void setFulfillmentType(FulfillmentType fulfillmentType) { this.fulfillmentType = fulfillmentType; }
     public DeliveryAddress getDeliveryAddress() { return deliveryAddress; }
     public void setDeliveryAddress(DeliveryAddress deliveryAddress) { this.deliveryAddress = deliveryAddress; }
     public Instant getPlacedAt() { return placedAt; }

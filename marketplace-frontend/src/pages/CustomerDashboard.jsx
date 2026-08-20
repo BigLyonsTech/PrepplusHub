@@ -9,24 +9,9 @@ import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ToastProvider'
 import ProductThumb from '@/components/ProductThumb'
 import PriceTag from '@/components/PriceTag'
+import { statusLabel, STATUS_BADGE_CLASS } from '@/lib/orderStatus'
 
 const tabs = ['For You', 'Cart', 'Orders']
-
-const STATUS_LABELS = {
-  PROCESSING: 'Processing',
-  SHIPPED: 'Shipped',
-  OUT_FOR_DELIVERY: 'Out for delivery',
-  DELIVERED: 'Delivered',
-  CANCELLED: 'Cancelled',
-}
-
-const STATUS_BADGE = {
-  PROCESSING: 'bg-amber/15 text-amber',
-  SHIPPED: 'bg-leaf/15 text-leaf-dim',
-  OUT_FOR_DELIVERY: 'bg-leaf/15 text-leaf-dim',
-  DELIVERED: 'bg-emerald/15 text-emerald',
-  CANCELLED: 'bg-coral/15 text-coral',
-}
 
 export default function CustomerDashboard() {
   const user = useSelector((s) => s.auth.user)
@@ -183,8 +168,8 @@ export default function CustomerDashboard() {
                             Qty {qty} · ₦{(o.total || 0).toLocaleString()} · {new Date(o.placedAt).toLocaleDateString()}
                           </div>
                         </div>
-                        <span className={cn('text-xs font-medium rounded-full px-3 py-1.5', STATUS_BADGE[o.status])}>
-                          {STATUS_LABELS[o.status] || o.status}
+                        <span className={cn('text-xs font-medium rounded-full px-3 py-1.5', STATUS_BADGE_CLASS[o.status])}>
+                          {statusLabel(o.status, o.fulfillmentType)}
                         </span>
                       </Link>
                     )

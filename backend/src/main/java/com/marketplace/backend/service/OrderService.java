@@ -2,6 +2,7 @@ package com.marketplace.backend.service;
 
 import com.marketplace.backend.dto.CheckoutRequest;
 import com.marketplace.backend.exception.ApiException;
+import com.marketplace.backend.model.FulfillmentType;
 import com.marketplace.backend.model.Order;
 import com.marketplace.backend.model.OrderStatus;
 import com.marketplace.backend.model.Product;
@@ -25,6 +26,9 @@ import java.util.stream.StreamSupport;
 
 @Service
 public class OrderService {
+
+    private static final String STORE_PICKUP_ADDRESS =
+            "23 Bisiriyu Lawal St, Shasha, Lagos 100275, Lagos Nigeria";
 
     private static final Map<OrderStatus, Set<OrderStatus>> ALLOWED_TRANSITIONS = new EnumMap<>(OrderStatus.class);
     static {
@@ -67,17 +71,31 @@ public class OrderService {
             throw new ApiException("Cart is empty", HttpStatus.BAD_REQUEST);
         }
 
+        FulfillmentType fulfillmentType = request.getFulfillmentType() != null
+                ? request.getFulfillmentType() : FulfillmentType.DELIVERY;
+
+        String resolvedAddress;
+        if (fulfillmentType == FulfillmentType.PICKUP) {
+            resolvedAddress = STORE_PICKUP_ADDRESS;
+        } else {
+            if (request.getAddress() == null || request.getAddress().isBlank()) {
+                throw new ApiException("Address is required for delivery", HttpStatus.BAD_REQUEST);
+            }
+            resolvedAddress = request.getAddress();
+        }
+
         Order order = new Order();
         order.setUserId(userId);
         order.setStatus(OrderStatus.PROCESSING);
         order.setStatusHistory(new ArrayList<>(List.of(new Order.StatusEvent(OrderStatus.PROCESSING, Instant.now()))));
+        order.setFulfillmentType(fulfillmentType);
         order.setPlacedAt(Instant.now());
 
         Order.DeliveryAddress addr = new Order.DeliveryAddress();
         addr.setFullName(request.getFullName());
-        addr.setAddress(request.getAddress());
+        addr.setAddress(resolvedAddress);
         addr.setPhone(request.getPhone());
-        geocodingService.geocode(request.getAddress()).ifPresent(latLng -> {
+        geocodingService.geocode(resolvedAddress).ifPresent(latLng -> {
             addr.setLat(latLng.lat());
             addr.setLng(latLng.lng());
         });

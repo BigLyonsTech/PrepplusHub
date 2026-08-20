@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check } from 'lucide-react'
+import { Check, MapPin, Phone } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
@@ -10,6 +10,10 @@ import { Field, Input } from '@/components/ui/Input'
 import FormError from '@/components/ui/FormError'
 import ProgressBar from '@/components/ui/ProgressBar'
 import { checkout, fetchCart, fetchProducts } from '@/store/slices/catalogSlice'
+import { cn } from '@/lib/utils'
+
+const STORE_ADDRESS = '23 Bisiriyu Lawal St, Shasha, Lagos 100275, Lagos Nigeria'
+const STORE_PHONES = ['091-355-55567', '091-373-59114']
 
 export default function CheckoutFlow() {
   const dispatch = useDispatch()
@@ -22,6 +26,7 @@ export default function CheckoutFlow() {
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [error, setError] = useState('')
+  const [fulfillmentType, setFulfillmentType] = useState('DELIVERY')
   const [delivery, setDelivery] = useState({
     fullName: user?.name || '',
     address: '',
@@ -45,8 +50,9 @@ export default function CheckoutFlow() {
     const result = await dispatch(
       checkout({
         fullName: delivery.fullName,
-        address: delivery.address,
+        address: fulfillmentType === 'DELIVERY' ? delivery.address : undefined,
         phone: delivery.phone,
+        fulfillmentType,
       }),
     )
     setLoading(false)
@@ -88,7 +94,29 @@ export default function CheckoutFlow() {
           <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div key="1" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="mt-8 space-y-5">
-                <h2 className="font-display text-2xl font-semibold mb-4">Delivery address</h2>
+                <h2 className="font-display text-2xl font-semibold mb-4">How should we get this to you?</h2>
+
+                <div className="flex gap-2 mb-2">
+                  {[
+                    { key: 'DELIVERY', label: 'Deliver to me' },
+                    { key: 'PICKUP', label: 'Pick up in store' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setFulfillmentType(opt.key)}
+                      className={cn(
+                        'flex-1 text-sm font-medium rounded-xl border py-3 transition-colors',
+                        fulfillmentType === opt.key
+                          ? 'border-leaf bg-leaf/8 text-leaf-dim'
+                          : 'border-onLight/15 text-onLight/60 hover:border-onLight/25',
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+
                 <Field label="Full name">
                   <Input
                     placeholder="Ada Obi"
@@ -97,14 +125,29 @@ export default function CheckoutFlow() {
                     required
                   />
                 </Field>
-                <Field label="Address">
-                  <Input
-                    placeholder="Street, city, state"
-                    value={delivery.address}
-                    onChange={(e) => setDelivery((d) => ({ ...d, address: e.target.value }))}
-                    required
-                  />
-                </Field>
+
+                {fulfillmentType === 'DELIVERY' ? (
+                  <Field label="Address">
+                    <Input
+                      placeholder="Street, city, state"
+                      value={delivery.address}
+                      onChange={(e) => setDelivery((d) => ({ ...d, address: e.target.value }))}
+                      required
+                    />
+                  </Field>
+                ) : (
+                  <div className="rounded-xl border border-onLight/10 bg-paper p-4 space-y-2">
+                    <div className="flex gap-2 text-sm">
+                      <MapPin size={16} className="text-leaf shrink-0 mt-0.5" />
+                      <span className="text-onLight/70">{STORE_ADDRESS}</span>
+                    </div>
+                    <div className="flex gap-2 text-sm">
+                      <Phone size={16} className="text-leaf shrink-0 mt-0.5" />
+                      <span className="text-onLight/70">{STORE_PHONES.join(' · ')}</span>
+                    </div>
+                  </div>
+                )}
+
                 <Field label="Phone">
                   <Input
                     placeholder="+234 800 000 0000"
@@ -151,7 +194,13 @@ export default function CheckoutFlow() {
               <Button variant="outline" onClick={() => setStep(step - 1)}>Back</Button>
             ) : <span />}
             <Button
-              disabled={loading || (step === 1 && (!delivery.fullName || !delivery.address || !delivery.phone))}
+              disabled={
+                loading ||
+                (step === 1 &&
+                  (!delivery.fullName ||
+                    !delivery.phone ||
+                    (fulfillmentType === 'DELIVERY' && !delivery.address)))
+              }
               onClick={() => (step < 3 ? setStep(step + 1) : placeOrder())}
             >
               {loading ? 'Placing…' : step < 3 ? 'Continue' : 'Place order'}

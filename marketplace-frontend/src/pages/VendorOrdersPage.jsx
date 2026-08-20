@@ -9,6 +9,7 @@ import { Select } from '@/components/ui/Input'
 import { fetchVendorOrders, updateOrderStatus } from '@/store/slices/catalogSlice'
 import { useToast } from '@/components/ToastProvider'
 import { cn } from '@/lib/utils'
+import { statusLabel, STATUS_BADGE_CLASS } from '@/lib/orderStatus'
 
 const NEXT_STATUSES = {
   PROCESSING: ['SHIPPED', 'CANCELLED'],
@@ -16,22 +17,6 @@ const NEXT_STATUSES = {
   OUT_FOR_DELIVERY: ['DELIVERED'],
   DELIVERED: [],
   CANCELLED: [],
-}
-
-const STATUS_LABELS = {
-  PROCESSING: 'Processing',
-  SHIPPED: 'Shipped',
-  OUT_FOR_DELIVERY: 'Out for delivery',
-  DELIVERED: 'Delivered',
-  CANCELLED: 'Cancelled',
-}
-
-const STATUS_BADGE = {
-  PROCESSING: 'bg-amber/15 text-amber',
-  SHIPPED: 'bg-leaf/15 text-leaf-dim',
-  OUT_FOR_DELIVERY: 'bg-leaf/15 text-leaf-dim',
-  DELIVERED: 'bg-emerald/15 text-emerald',
-  CANCELLED: 'bg-coral/15 text-coral',
 }
 
 export default function VendorOrdersPage() {
@@ -109,10 +94,13 @@ function OrderRow({ order }) {
           <div className="text-xs text-onLight/45 mt-0.5">
             {order.items?.length} item{order.items?.length === 1 ? '' : 's'} · ₦{order.total.toLocaleString()} ·{' '}
             {new Date(order.placedAt).toLocaleDateString()}
+            {order.fulfillmentType === 'PICKUP' && (
+              <span className="ml-2 text-amber font-medium">· Pickup</span>
+            )}
           </div>
         </div>
-        <span className={cn('text-xs font-medium rounded-full px-3 py-1.5 shrink-0', STATUS_BADGE[order.status])}>
-          {STATUS_LABELS[order.status]}
+        <span className={cn('text-xs font-medium rounded-full px-3 py-1.5 shrink-0', STATUS_BADGE_CLASS[order.status])}>
+          {statusLabel(order.status, order.fulfillmentType)}
         </span>
       </div>
 
@@ -120,7 +108,7 @@ function OrderRow({ order }) {
         <div className="flex items-center gap-2 mt-4 pt-4 border-t border-onLight/10">
           <Select value={next} onChange={(e) => setNext(e.target.value)} className="w-auto h-9 text-xs">
             {nextOptions.map((s) => (
-              <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+              <option key={s} value={s}>{statusLabel(s, order.fulfillmentType)}</option>
             ))}
           </Select>
           <button

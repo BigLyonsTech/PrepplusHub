@@ -60,12 +60,18 @@ export default function OrderTrackingPage() {
         <div className="grid md:grid-cols-2 gap-10">
           <Reveal className="bg-surface border border-onLight/10 rounded-2xl p-6">
             <h2 className="font-display text-lg font-semibold mb-5">Status</h2>
-            <OrderStatusStepper status={order.status} statusHistory={order.statusHistory} />
+            <OrderStatusStepper
+              status={order.status}
+              statusHistory={order.statusHistory}
+              fulfillmentType={order.fulfillmentType}
+            />
           </Reveal>
 
           <Reveal delay={0.06} className="flex flex-col gap-6">
             <div className="bg-surface border border-onLight/10 rounded-2xl p-6">
-              <h2 className="font-display text-lg font-semibold mb-4">Delivery address</h2>
+              <h2 className="font-display text-lg font-semibold mb-4">
+                {order.fulfillmentType === 'PICKUP' ? 'Pickup location' : 'Delivery address'}
+              </h2>
               <div className="flex gap-3">
                 <MapPin size={18} className="text-leaf shrink-0 mt-0.5" />
                 <div className="text-sm">

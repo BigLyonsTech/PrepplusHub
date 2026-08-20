@@ -1,5 +1,6 @@
 package com.marketplace.backend.dto;
 
+import com.marketplace.backend.model.FulfillmentType;
 import jakarta.validation.constraints.NotBlank;
 
 public class CheckoutRequest {
@@ -7,11 +8,13 @@ public class CheckoutRequest {
     @NotBlank
     private String fullName;
 
-    @NotBlank
+    // Not @NotBlank — only required for DELIVERY, validated conditionally in OrderService.
     private String address;
 
     @NotBlank
     private String phone;
+
+    private FulfillmentType fulfillmentType = FulfillmentType.DELIVERY;
 
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
@@ -19,4 +22,6 @@ public class CheckoutRequest {
     public void setAddress(String address) { this.address = address; }
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+    public FulfillmentType getFulfillmentType() { return fulfillmentType; }
+    public void setFulfillmentType(FulfillmentType fulfillmentType) { this.fulfillmentType = fulfillmentType; }
 }
