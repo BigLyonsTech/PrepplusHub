@@ -16,6 +16,7 @@ import TestimonialCarousel from '@/components/TestimonialCarousel'
 import HowItWorks from '@/components/HowItWorks'
 import TrustBar from '@/components/TrustBar'
 import FlashSaleBanner from '@/components/FlashSaleBanner'
+import VideoEmbed from '@/components/VideoEmbed'
 import { CATEGORY_TINTS } from '@/lib/categoryTints'
 
 const stats = [
@@ -23,6 +24,12 @@ const stats = [
   { icon: Users, label: 'Shoppers', value: '32,000+' },
   { icon: ShieldCheck, label: 'ID-checked before listing', value: '100%' },
 ]
+
+// Fill these in once the videos are recorded — VideoEmbed shows a clean
+// placeholder card until then. Accepts a direct file URL or an embed URL
+// (e.g. https://www.youtube.com/embed/VIDEO_ID).
+const SELL_WITH_US_VIDEO = ''
+const VENDOR_WALKTHROUGH_VIDEO = ''
 
 const quickCategories = ['Electronics', 'Fashion', 'Home', 'Beauty', 'Sports']
 
@@ -228,6 +235,17 @@ export default function LandingPage() {
               Apply once, get reviewed quickly, and sell to an audience that's already looking for
               what you make.
             </p>
+          </Reveal>
+        </div>
+
+        <div className="container-page grid md:grid-cols-2 gap-8 mt-16">
+          <Reveal>
+            <VideoEmbed src={SELL_WITH_US_VIDEO} title="Why sell with PrepplusHub" />
+            <p className="text-sm text-onLight/50 mt-3">See how selling on PrepplusHub works</p>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <VideoEmbed src={VENDOR_WALKTHROUGH_VIDEO} title="How to create your vendor account" />
+            <p className="text-sm text-onLight/50 mt-3">A walkthrough of setting up your vendor account</p>
           </Reveal>
         </div>
       </section>

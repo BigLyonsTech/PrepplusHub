@@ -1,8 +1,36 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import PageLoader from './components/PageLoader'
 import ChatWidget from './components/ChatWidget'
+
+const NAVBAR_OFFSET = 64 // navbar is h-16, fixed — account for it when scrolling to an anchor
+
+// Footer links like /#why-sell land on the right route, but React Router
+// doesn't scroll to hash targets itself — and since pages are lazy-loaded,
+// the target element may not exist in the DOM the instant navigation
+// happens, so this polls briefly rather than trying once and giving up.
+function useScrollToHash() {
+  const location = useLocation()
+
+  useEffect(() => {
+    if (!location.hash) return
+    const id = location.hash.slice(1)
+    let attempts = 0
+    const timer = setInterval(() => {
+      const el = document.getElementById(id)
+      attempts += 1
+      if (el) {
+        const top = el.getBoundingClientRect().top + window.scrollY - NAVBAR_OFFSET
+        window.scrollTo({ top, behavior: 'smooth' })
+        clearInterval(timer)
+      } else if (attempts > 20) {
+        clearInterval(timer)
+      }
+    }, 100)
+    return () => clearInterval(timer)
+  }, [location.pathname, location.hash])
+}
 
 // Every page is code-split. Three.js is gone entirely (Logo3D is a CSS/
 // framer-motion flip, not WebGL) and GSAP isn't imported by any live code
@@ -29,6 +57,7 @@ const VendorOrdersPage = lazy(() => import('./pages/VendorOrdersPage'))
 
 export default function App() {
   const location = useLocation()
+  useScrollToHash()
 
   return (
     <>
