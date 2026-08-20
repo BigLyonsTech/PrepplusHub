@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { Leaf } from 'lucide-react'
 import logoImg from '@/assets/prepplus-logo.png'
 
 const faceBase =
@@ -8,11 +7,10 @@ const faceBase =
 // A small always-on 3D flip, built from two backface-hidden faces rotating on
 // the Y axis — reads as a real 3D mark without pulling in a WebGL library
 // (three.js was deliberately dropped from this project for bundle weight,
-// and the navbar renders on every route, so it has to stay this light). The
-// front face is the real brand logo; the back reuses the logo's own leaf
-// motif on a brand-gradient panel rather than a mirrored copy of the full
-// image, since a raster logo with text would read backwards for half of
-// every spin otherwise.
+// and the navbar renders on every route, so it has to stay this light). Both
+// faces show the same logo image — the back face's img is additionally
+// mirrored with scaleX(-1) to cancel out the rotateY(180deg) flip, so it
+// reads correctly (not backwards) as it comes into view mid-spin.
 export default function Logo3D({ size = 40 }) {
   return (
     <span
@@ -33,14 +31,13 @@ export default function Logo3D({ size = 40 }) {
         <span className={faceBase}>
           <img src={logoImg} alt="PrepplusHub" className="w-full h-full object-contain" />
         </span>
-        <span
-          className={faceBase}
-          style={{
-            transform: 'rotateY(180deg)',
-            background: 'linear-gradient(135deg, var(--color-leaf), var(--color-leaf-dim))',
-          }}
-        >
-          <Leaf size={size * 0.55} className="text-white/90" strokeWidth={1.75} />
+        <span className={faceBase} style={{ transform: 'rotateY(180deg)' }}>
+          <img
+            src={logoImg}
+            alt="PrepplusHub"
+            className="w-full h-full object-contain"
+            style={{ transform: 'scaleX(-1)' }}
+          />
         </span>
       </motion.span>
     </span>
