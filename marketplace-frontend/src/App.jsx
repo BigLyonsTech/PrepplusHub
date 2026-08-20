@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import PageLoader from './components/PageLoader'
 import ChatWidget from './components/ChatWidget'
+import WhatsAppButton from './components/WhatsAppButton'
 
 const NAVBAR_OFFSET = 64 // navbar is h-16, fixed — account for it when scrolling to an anchor
 
@@ -106,6 +107,7 @@ export default function App() {
           </Routes>
         </AnimatePresence>
       </Suspense>
+      <WhatsAppButton />
       <ChatWidget />
     </>
   )
