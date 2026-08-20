@@ -12,6 +12,12 @@ import { ShieldCheck } from 'lucide-react'
 
 const idTypes = ['National ID (NIN)', 'International Passport', "Driver's License", "Voter's Card"]
 
+const months = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+const days = Array.from({ length: 31 }, (_, i) => i + 1)
+
 export default function RegistrationForm() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -28,7 +34,8 @@ export default function RegistrationForm() {
     phone: '',
     idType: idTypes[0],
     idNumber: '',
-    dob: '',
+    dobMonth: '',
+    dobDay: '',
     address: '',
   })
 
@@ -44,7 +51,7 @@ export default function RegistrationForm() {
     if (form.password.length < 8) nextErrors.password = 'Use at least 8 characters.'
     if (!form.phone) nextErrors.phone = 'Enter a phone number.'
     if (!form.idNumber) nextErrors.idNumber = 'ID number is required.'
-    if (!form.dob) nextErrors.dob = 'Date of birth is required.'
+    if (!form.dobMonth || !form.dobDay) nextErrors.dob = 'Enter your birth month and day.'
     if (!form.address) nextErrors.address = 'Enter your address.'
     if (!captchaChecked) nextErrors.captcha = "Confirm you're not a robot."
     if (!agreedToTerms) nextErrors.terms = 'You must agree to the Terms of Service.'
@@ -60,7 +67,7 @@ export default function RegistrationForm() {
         phone: form.phone,
         idType: form.idType,
         idNumber: form.idNumber,
-        dob: form.dob,
+        dob: `${String(months.indexOf(form.dobMonth) + 1).padStart(2, '0')}-${String(form.dobDay).padStart(2, '0')}`,
         address: form.address,
         agreedToTerms: true,
         registrationIntent: registrationIntent || null,
@@ -121,8 +128,21 @@ export default function RegistrationForm() {
             <Field label="ID number" error={errors.idNumber}>
               <Input value={form.idNumber} onChange={(e) => update('idNumber', e.target.value)} placeholder="00000000000" />
             </Field>
-            <Field label="Date of birth" error={errors.dob}>
-              <Input type="date" value={form.dob} onChange={(e) => update('dob', e.target.value)} />
+            <Field label="Birth month & day" error={errors.dob} hint="No year needed">
+              <div className="grid grid-cols-2 gap-3">
+                <Select value={form.dobMonth} onChange={(e) => update('dobMonth', e.target.value)}>
+                  <option value="" disabled>Month</option>
+                  {months.map((m) => (
+                    <option key={m}>{m}</option>
+                  ))}
+                </Select>
+                <Select value={form.dobDay} onChange={(e) => update('dobDay', e.target.value)}>
+                  <option value="" disabled>Day</option>
+                  {days.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </Select>
+              </div>
             </Field>
             <Field label="Address" error={errors.address}>
               <Input value={form.address} onChange={(e) => update('address', e.target.value)} placeholder="Street, city, state" />

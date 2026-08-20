@@ -1,13 +1,17 @@
 import { motion } from 'framer-motion'
+import logoImg from '@/assets/prepplus-logo.png'
 
 const faceBase =
-  'absolute inset-0 flex items-center justify-center rounded-[9px] font-display font-semibold text-[15px] leading-none [backface-visibility:hidden]'
+  'absolute inset-0 rounded-[9px] [backface-visibility:hidden] overflow-hidden'
 
 // A small always-on 3D flip, built from two backface-hidden faces rotating on
 // the Y axis — reads as a real 3D mark without pulling in a WebGL library
 // (three.js was deliberately dropped from this project for bundle weight,
-// and the navbar renders on every route, so it has to stay this light).
-export default function Logo3D({ size = 30 }) {
+// and the navbar renders on every route, so it has to stay this light). The
+// front face is the real brand logo; the back is a plain brand-gradient
+// panel rather than a mirrored copy, since a raster logo with text would
+// read backwards for half of every spin otherwise.
+export default function Logo3D({ size = 40 }) {
   return (
     <span
       className="relative inline-block shrink-0"
@@ -24,24 +28,16 @@ export default function Logo3D({ size = 30 }) {
         transition={{ duration: 9, repeat: Infinity, ease: 'linear' }}
         whileHover={{ scale: 1.08 }}
       >
-        <span
-          className={`${faceBase} text-ink dark:text-white`}
-          style={{
-            background: 'linear-gradient(135deg, var(--color-leaf), var(--color-leaf-dim))',
-          }}
-        >
-          P
+        <span className={faceBase}>
+          <img src={logoImg} alt="PrepplusHub" className="w-full h-full object-contain" />
         </span>
         <span
           className={faceBase}
           style={{
             transform: 'rotateY(180deg)',
-            background: 'linear-gradient(135deg, var(--color-canopy), var(--color-ink))',
-            color: 'var(--color-onDark)',
+            background: 'linear-gradient(135deg, var(--color-leaf), var(--color-leaf-dim))',
           }}
-        >
-          P
-        </span>
+        />
       </motion.span>
     </span>
   )

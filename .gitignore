@@ -6,3 +6,6 @@ Thumbs.db
 
 # Editors
 *.swp
+
+# Local Netlify folder
+.netlify
