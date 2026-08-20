@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
+import BackButton from '@/components/ui/BackButton'
 import ProgressBar from '@/components/ui/ProgressBar'
 import FormError from '@/components/ui/FormError'
 import { completePersonalization } from '@/store/slices/authSlice'
@@ -57,6 +58,9 @@ export default function CustomerOnboardingQuiz() {
   return (
     <PageBackdrop>
       <Navbar />
+      <div className="container-page pt-6">
+        <BackButton to="/role-confirmation" />
+      </div>
       <div className="container-page py-16 flex justify-center">
         <div className="w-full max-w-lg">
           <ProgressBar step={step} total={3} />

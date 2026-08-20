@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
+import BackButton from '@/components/ui/BackButton'
 import { setRegistrationIntent } from '@/store/slices/authSlice'
 
 export default function AuthEntry() {
@@ -21,6 +22,9 @@ export default function AuthEntry() {
   return (
     <PageBackdrop>
       <Navbar />
+      <div className="container-page pt-6">
+        <BackButton to="/" />
+      </div>
       <div className="container-page py-24 flex justify-center">
         <motion.div
           initial={{ opacity: 0, y: 24 }}

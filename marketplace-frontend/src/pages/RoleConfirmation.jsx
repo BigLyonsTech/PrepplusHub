@@ -6,6 +6,7 @@ import { ShoppingBag, Store } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
+import BackButton from '@/components/ui/BackButton'
 import FormError from '@/components/ui/FormError'
 import { confirmRole } from '@/store/slices/authSlice'
 import { cn } from '@/lib/utils'
@@ -49,6 +50,9 @@ export default function RoleConfirmation() {
   return (
     <PageBackdrop>
       <Navbar />
+      <div className="container-page pt-6">
+        <BackButton to="/" />
+      </div>
       <div className="container-page py-20 flex flex-col items-center">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
           <h1 className="font-display text-4xl font-semibold mb-2">How do you want to use PrepplusHub?</h1>

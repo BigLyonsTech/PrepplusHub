@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
+import BackButton from '@/components/ui/BackButton'
 import { Field, Input, Select } from '@/components/ui/Input'
 import FormError from '@/components/ui/FormError'
 import { registerUser } from '@/store/slices/authSlice'
@@ -82,6 +83,9 @@ export default function RegistrationForm() {
   return (
     <PageBackdrop>
       <Navbar />
+      <div className="container-page pt-6">
+        <BackButton to="/auth" />
+      </div>
       <div className="container-page py-16 flex justify-center">
         <motion.form
           onSubmit={handleSubmit}

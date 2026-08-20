@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
+import BackButton from '@/components/ui/BackButton'
 import FormError from '@/components/ui/FormError'
 import { verifyOtp } from '@/store/slices/authSlice'
 import { api } from '@/lib/api'
@@ -67,6 +68,9 @@ export default function OTPVerification() {
   return (
     <PageBackdrop>
       <Navbar />
+      <div className="container-page pt-6">
+        <BackButton to="/register" />
+      </div>
       <div className="container-page py-24 flex justify-center">
         <motion.form
           onSubmit={handleSubmit}
