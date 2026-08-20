@@ -22,8 +22,9 @@ export default function Navbar() {
     <>
       <header className="fixed top-0 inset-x-0 z-40 bg-paper/95 border-b border-onLight/8">
         <nav className="container-page flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center" aria-label="PrepplusHub">
+          <Link to="/" className="flex items-center gap-2.5 font-display text-xl font-semibold tracking-tight">
             <Logo3D />
+            <span className="text-gradient-brand">PrepplusHub</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-1">
