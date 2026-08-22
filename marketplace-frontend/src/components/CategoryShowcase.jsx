@@ -13,6 +13,7 @@ const categories = [
   { name: 'Fragrances', count: '25+ items' },
   { name: 'Home Appliances', count: '5+ items' },
   { name: 'Personal Care', count: '30+ items' },
+  { name: 'Toys', count: '19+ items' },
 ]
 
 export default function CategoryShowcase({ products = [] }) {
