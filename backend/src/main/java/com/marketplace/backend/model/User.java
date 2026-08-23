@@ -44,6 +44,7 @@ public class User {
     private ProfileCustomization profileCustomization;
 
     private List<CartItem> cart = new ArrayList<>();
+    private List<String> wishlist = new ArrayList<>();
 
     private Instant createdAt = Instant.now();
     private Instant updatedAt = Instant.now();
@@ -192,6 +193,8 @@ public class User {
     public void setProfileCustomization(ProfileCustomization profileCustomization) { this.profileCustomization = profileCustomization; }
     public List<CartItem> getCart() { return cart; }
     public void setCart(List<CartItem> cart) { this.cart = cart; }
+    public List<String> getWishlist() { return wishlist; }
+    public void setWishlist(List<String> wishlist) { this.wishlist = wishlist; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

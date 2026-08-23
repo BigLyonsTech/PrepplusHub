@@ -6,10 +6,11 @@ import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import PageBackdrop from '@/components/PageBackdrop'
-import { addToCart, fetchProducts } from '@/store/slices/catalogSlice'
+import { addToCart, fetchProducts, fetchWishlist } from '@/store/slices/catalogSlice'
 import { useToast } from '@/components/ToastProvider'
 import ProductThumb from '@/components/ProductThumb'
 import PriceTag from '@/components/PriceTag'
+import WishlistButton from '@/components/WishlistButton'
 import { CATEGORY_TINTS } from '@/lib/categoryTints'
 
 const SWIPE_OFFSET_THRESHOLD = 80
@@ -31,7 +32,8 @@ export default function ProductsBrowse() {
   // between categories is instant client-side filtering, not a round-trip.
   useEffect(() => {
     dispatch(fetchProducts())
-  }, [dispatch])
+    if (isAuthenticated) dispatch(fetchWishlist())
+  }, [dispatch, isAuthenticated])
 
   const activeCategories = useMemo(() => {
     const present = new Set(products.map((p) => p.category))
@@ -140,20 +142,23 @@ export default function ProductsBrowse() {
                   <div className="text-xs text-onLight/45 mt-0.5">{p.vendor}</div>
                   <div className="flex items-center justify-between mt-3 gap-2">
                     <PriceTag product={p} />
-                    <button
-                      onClick={() => {
-                        if (!isAuthenticated) {
-                          window.location.href = '/auth?intent=customer'
-                          return
-                        }
-                        dispatch(addToCart(p.id))
-                          .unwrap()
-                          .catch((message) => showToast(message || 'Could not add that to your cart', 'error'))
-                      }}
-                      className="shrink-0 text-xs font-medium bg-ink text-white rounded-full px-3 py-1.5 hover:bg-black"
-                    >
-                      Add
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <WishlistButton productId={p.id} />
+                      <button
+                        onClick={() => {
+                          if (!isAuthenticated) {
+                            window.location.href = '/auth?intent=customer'
+                            return
+                          }
+                          dispatch(addToCart(p.id))
+                            .unwrap()
+                            .catch((message) => showToast(message || 'Could not add that to your cart', 'error'))
+                        }}
+                        className="shrink-0 text-xs font-medium bg-ink text-white rounded-full px-3 py-1.5 hover:bg-black"
+                      >
+                        Add
+                      </button>
+                    </div>
                   </div>
                 </div>
               </motion.div>

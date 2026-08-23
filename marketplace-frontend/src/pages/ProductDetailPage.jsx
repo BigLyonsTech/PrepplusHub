@@ -15,9 +15,11 @@ import {
   fetchProduct,
   fetchProductReviews,
   fetchVendorReviews,
+  fetchWishlist,
 } from '@/store/slices/catalogSlice'
 import ProductThumb from '@/components/ProductThumb'
 import PriceTag from '@/components/PriceTag'
+import WishlistButton from '@/components/WishlistButton'
 import FormError from '@/components/ui/FormError'
 import { useToast } from '@/components/ToastProvider'
 import { cn } from '@/lib/utils'
@@ -44,11 +46,10 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     setLoading(true)
-    Promise.all([
-      dispatch(fetchProduct(id)),
-      dispatch(fetchProductReviews(id)),
-    ]).finally(() => setLoading(false))
-  }, [dispatch, id])
+    const tasks = [dispatch(fetchProduct(id)), dispatch(fetchProductReviews(id))]
+    if (isAuthenticated) tasks.push(dispatch(fetchWishlist()))
+    Promise.all(tasks).finally(() => setLoading(false))
+  }, [dispatch, id, isAuthenticated])
 
   useEffect(() => {
     if (product?.vendorId) {
@@ -145,6 +146,7 @@ export default function ProductDetailPage() {
               >
                 Add to cart
               </Button>
+              <WishlistButton productId={product.id} size={20} className="border border-onLight/15" />
             </div>
             <FormError className="mt-4">{error}</FormError>
           </motion.div>

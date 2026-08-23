@@ -82,6 +82,36 @@ export const clearCart = createAsyncThunk('catalog/clearCart', async (_, { rejec
   }
 })
 
+export const fetchWishlist = createAsyncThunk('catalog/fetchWishlist', async (_, { rejectWithValue }) => {
+  try {
+    return await api.getWishlist()
+  } catch (e) {
+    return rejectWithValue(e.message)
+  }
+})
+
+export const addToWishlist = createAsyncThunk(
+  'catalog/addToWishlist',
+  async (productId, { rejectWithValue }) => {
+    try {
+      return await api.addToWishlist(productId)
+    } catch (e) {
+      return rejectWithValue(e.message)
+    }
+  },
+)
+
+export const removeFromWishlist = createAsyncThunk(
+  'catalog/removeFromWishlist',
+  async (productId, { rejectWithValue }) => {
+    try {
+      return await api.removeFromWishlist(productId)
+    } catch (e) {
+      return rejectWithValue(e.message)
+    }
+  },
+)
+
 export const fetchOrders = createAsyncThunk('catalog/fetchOrders', async (_, { rejectWithValue }) => {
   try {
     return await api.getOrders()
@@ -191,6 +221,9 @@ const initialState = {
   cart: [],
   cartStatus: 'idle',
   cartError: null,
+  wishlist: [],
+  wishlistStatus: 'idle',
+  wishlistError: null,
   productReviews: [],
   vendorReviews: [],
   orders: [],
@@ -287,6 +320,24 @@ const catalogSlice = createSlice({
       })
       .addCase(clearCart.fulfilled, (state, action) => {
         state.cart = action.payload || []
+      })
+      .addCase(fetchWishlist.pending, (state) => {
+        state.wishlistStatus = 'loading'
+        state.wishlistError = null
+      })
+      .addCase(fetchWishlist.fulfilled, (state, action) => {
+        state.wishlistStatus = 'succeeded'
+        state.wishlist = action.payload || []
+      })
+      .addCase(fetchWishlist.rejected, (state, action) => {
+        state.wishlistStatus = 'failed'
+        state.wishlistError = action.payload || 'Failed to load your wishlist'
+      })
+      .addCase(addToWishlist.fulfilled, (state, action) => {
+        state.wishlist = action.payload || []
+      })
+      .addCase(removeFromWishlist.fulfilled, (state, action) => {
+        state.wishlist = action.payload || []
       })
       .addCase(fetchOrders.pending, (state) => {
         state.ordersStatus = 'loading'

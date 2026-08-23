@@ -114,6 +114,12 @@ export const api = {
   recordPayout: (vendorId, body) =>
     request(`/admin/payouts/${vendorId}`, { method: 'POST', body: JSON.stringify(body) }),
 
+  // Wishlist
+  getWishlist: () => request('/wishlist'),
+  addToWishlist: (productId) =>
+    request('/wishlist/items', { method: 'POST', body: JSON.stringify({ productId }) }),
+  removeFromWishlist: (productId) => request(`/wishlist/items/${productId}`, { method: 'DELETE' }),
+
   // Reviews
   getProductReviews: (productId) => request(`/reviews/products/${productId}`),
   getVendorReviews: (vendorId) => request(`/reviews/vendors/${vendorId}`),

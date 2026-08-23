@@ -2,16 +2,25 @@ import { useState, useMemo, memo, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { X } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
-import { addToCart, fetchProducts, fetchCart, fetchOrders } from '@/store/slices/catalogSlice'
+import {
+  addToCart,
+  fetchProducts,
+  fetchCart,
+  fetchOrders,
+  fetchWishlist,
+  removeFromWishlist,
+} from '@/store/slices/catalogSlice'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ToastProvider'
 import ProductThumb from '@/components/ProductThumb'
 import PriceTag from '@/components/PriceTag'
+import WishlistButton from '@/components/WishlistButton'
 import { statusLabel, STATUS_BADGE_CLASS } from '@/lib/orderStatus'
 
-const tabs = ['For You', 'Cart', 'Orders']
+const tabs = ['For You', 'Wishlist', 'Cart', 'Orders']
 
 export default function CustomerDashboard() {
   const user = useSelector((s) => s.auth.user)
@@ -21,6 +30,9 @@ export default function CustomerDashboard() {
   const cart = useSelector((s) => s.catalog.cart)
   const cartStatus = useSelector((s) => s.catalog.cartStatus)
   const cartError = useSelector((s) => s.catalog.cartError)
+  const wishlist = useSelector((s) => s.catalog.wishlist)
+  const wishlistStatus = useSelector((s) => s.catalog.wishlistStatus)
+  const wishlistError = useSelector((s) => s.catalog.wishlistError)
   const orders = useSelector((s) => s.catalog.orders)
   const ordersStatus = useSelector((s) => s.catalog.ordersStatus)
   const ordersError = useSelector((s) => s.catalog.ordersError)
@@ -30,7 +42,7 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const tasks = [dispatch(fetchCart()), dispatch(fetchOrders())]
+    const tasks = [dispatch(fetchCart()), dispatch(fetchOrders()), dispatch(fetchWishlist())]
     if (catalogStatus !== 'succeeded') tasks.push(dispatch(fetchProducts()))
     Promise.all(tasks).finally(() => setLoading(false))
     // Intentionally mount-only — including catalogStatus here would refetch every time it changes.
@@ -77,6 +89,7 @@ export default function CustomerDashboard() {
               )}
             >
               {t} {t === 'Cart' && cart.length > 0 && `(${cart.length})`}
+              {t === 'Wishlist' && wishlist.length > 0 && `(${wishlist.length})`}
             </button>
           ))}
         </div>
@@ -103,6 +116,63 @@ export default function CustomerDashboard() {
                 ))}
               </motion.div>
             )
+          )}
+
+          {tab === 'Wishlist' && (
+            <motion.div key="wishlist" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              {loading ? (
+                <EmptyState text="Loading your wishlist…" />
+              ) : wishlistStatus === 'failed' ? (
+                <FailedState
+                  text={wishlistError || "Couldn't load your wishlist."}
+                  onRetry={() => dispatch(fetchWishlist())}
+                />
+              ) : wishlist.length === 0 ? (
+                <EmptyState text="Nothing saved yet. Tap the heart on a product to keep it here." />
+              ) : (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {wishlist.map((productId) => {
+                    const p = products.find((p) => p.id === productId)
+                    if (!p) return null
+                    return (
+                      <div key={p.id} className="bg-surface border border-onLight/10 rounded-2xl overflow-hidden">
+                        <Link to={`/products/${p.id}`} className="block aspect-[4/3]">
+                          <ProductThumb product={p} />
+                        </Link>
+                        <div className="p-4">
+                          <Link to={`/products/${p.id}`} className="font-medium text-sm hover:text-leaf">
+                            {p.name}
+                          </Link>
+                          <div className="text-xs text-onLight/45 mt-0.5">{p.vendor}</div>
+                          <div className="flex items-center justify-between mt-3 gap-2">
+                            <PriceTag product={p} />
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleAdd(p.id)}
+                                className="shrink-0 text-xs font-medium bg-ink text-white rounded-full px-3 py-1.5 hover:bg-black"
+                              >
+                                Add to cart
+                              </button>
+                              <button
+                                onClick={() =>
+                                  dispatch(removeFromWishlist(p.id))
+                                    .unwrap()
+                                    .catch((message) => showToast(message || 'Could not update your wishlist', 'error'))
+                                }
+                                aria-label="Remove from wishlist"
+                                className="shrink-0 p-1.5 rounded-full hover:bg-onLight/5"
+                              >
+                                <X size={14} className="text-onLight/40" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </motion.div>
           )}
 
           {tab === 'Cart' && (
@@ -200,12 +270,15 @@ const ProductCard = memo(function ProductCard({ product, onAdd }) {
         <div className="text-xs text-onLight/45 mt-0.5">{product.vendor}</div>
         <div className="flex items-center justify-between mt-3 gap-2">
           <PriceTag product={product} />
-          <button
-            onClick={onAdd}
-            className="shrink-0 text-xs font-medium bg-ink text-white rounded-full px-3 py-1.5 hover:bg-black"
-          >
-            Add
-          </button>
+          <div className="flex items-center gap-1">
+            <WishlistButton productId={product.id} />
+            <button
+              onClick={onAdd}
+              className="shrink-0 text-xs font-medium bg-ink text-white rounded-full px-3 py-1.5 hover:bg-black"
+            >
+              Add
+            </button>
+          </div>
         </div>
       </div>
     </motion.div>
