@@ -1,15 +1,19 @@
 package com.marketplace.backend.controller;
 
+import com.marketplace.backend.dto.RecordPayoutRequest;
 import com.marketplace.backend.dto.RejectRequest;
 import com.marketplace.backend.dto.UserResponse;
 import com.marketplace.backend.model.PlatformSettings;
+import com.marketplace.backend.model.Payout;
 import com.marketplace.backend.model.Product;
 import com.marketplace.backend.model.User;
 import com.marketplace.backend.security.SecurityUtils;
 import com.marketplace.backend.service.AdminService;
+import com.marketplace.backend.service.PayoutService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -17,9 +21,11 @@ import java.util.Map;
 public class AdminController {
 
     private final AdminService adminService;
+    private final PayoutService payoutService;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, PayoutService payoutService) {
         this.adminService = adminService;
+        this.payoutService = payoutService;
     }
 
     @GetMapping("/dashboard")
@@ -52,5 +58,15 @@ public class AdminController {
     @PostMapping("/products/{id}/activate")
     public Product activateProduct(@PathVariable String id) {
         return adminService.setProductActive(id, true);
+    }
+
+    @GetMapping("/payouts")
+    public List<Map<String, Object>> payouts() {
+        return payoutService.listForAdmin();
+    }
+
+    @PostMapping("/payouts/{vendorId}")
+    public Payout recordPayout(@PathVariable String vendorId, @Valid @RequestBody RecordPayoutRequest request) {
+        return payoutService.recordPayout(SecurityUtils.requireUserId(), vendorId, request);
     }
 }

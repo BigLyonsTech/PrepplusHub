@@ -108,6 +108,12 @@ export const api = {
   updateOrderStatus: (id, status) =>
     request(`/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
 
+  // Payouts
+  getVendorPayouts: () => request('/vendor/payouts'),
+  getAdminPayouts: () => request('/admin/payouts'),
+  recordPayout: (vendorId, body) =>
+    request(`/admin/payouts/${vendorId}`, { method: 'POST', body: JSON.stringify(body) }),
+
   // Reviews
   getProductReviews: (productId) => request(`/reviews/products/${productId}`),
   getVendorReviews: (vendorId) => request(`/reviews/vendors/${vendorId}`),

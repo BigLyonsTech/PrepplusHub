@@ -120,6 +120,17 @@ export const updateOrderStatus = createAsyncThunk(
   },
 )
 
+export const fetchVendorPayouts = createAsyncThunk(
+  'catalog/fetchVendorPayouts',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await api.getVendorPayouts()
+    } catch (e) {
+      return rejectWithValue(e.message)
+    }
+  },
+)
+
 export const checkout = createAsyncThunk('catalog/checkout', async (body, { rejectWithValue }) => {
   try {
     return await api.checkout(body)
@@ -191,6 +202,9 @@ const initialState = {
   vendorOrders: [],
   vendorOrdersStatus: 'idle',
   vendorOrdersError: null,
+  vendorPayouts: { earned: 0, paidOut: 0, balance: 0, payouts: [] },
+  vendorPayoutsStatus: 'idle',
+  vendorPayoutsError: null,
   status: 'idle',
   error: null,
 }
@@ -314,6 +328,18 @@ const catalogSlice = createSlice({
         replaceOrderIn(state.vendorOrders, action.payload)
         replaceOrderIn(state.orders, action.payload)
         if (state.currentOrder?.id === action.payload.id) state.currentOrder = action.payload
+      })
+      .addCase(fetchVendorPayouts.pending, (state) => {
+        state.vendorPayoutsStatus = 'loading'
+        state.vendorPayoutsError = null
+      })
+      .addCase(fetchVendorPayouts.fulfilled, (state, action) => {
+        state.vendorPayoutsStatus = 'succeeded'
+        state.vendorPayouts = action.payload || { earned: 0, paidOut: 0, balance: 0, payouts: [] }
+      })
+      .addCase(fetchVendorPayouts.rejected, (state, action) => {
+        state.vendorPayoutsStatus = 'failed'
+        state.vendorPayoutsError = action.payload || 'Failed to load your payouts'
       })
       .addCase(checkout.fulfilled, (state, action) => {
         state.cart = []

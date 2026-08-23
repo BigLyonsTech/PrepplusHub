@@ -71,7 +71,7 @@ export default function VendorDashboard() {
 
   const actions = [
     { icon: PlusCircle, label: 'Add a product', locked: !verified, onClick: () => setShowForm(true) },
-    { icon: Wallet, label: 'View payouts', locked: !verified },
+    { icon: Wallet, label: 'View payouts', locked: !verified, onClick: () => navigate('/vendor/payouts') },
     { icon: Package, label: 'Manage orders', locked: !verified, onClick: () => navigate('/vendor/orders') },
   ]
 

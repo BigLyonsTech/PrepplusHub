@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Check, X, Activity, LayoutGrid } from 'lucide-react'
+import { Check, X, Activity, LayoutGrid, Wallet } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import {
@@ -10,23 +10,34 @@ import {
   rejectVendor,
   toggleFeaturedCategory,
   fetchAdminDashboard,
+  fetchAdminPayouts,
+  recordPayout,
 } from '@/store/slices/adminSlice'
 import { useToast } from '@/components/ToastProvider'
 import FormError from '@/components/ui/FormError'
 import { cn } from '@/lib/utils'
 
-const sections = ['Vendor Queue', 'Approved Vendors', 'Customer Queue', 'Activity Log', 'Dashboard Curation']
+const sections = ['Vendor Queue', 'Approved Vendors', 'Customer Queue', 'Payouts', 'Activity Log', 'Dashboard Curation']
 
 export default function AdminDashboard() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const user = useSelector((s) => s.auth.user)
-  const { vendorQueue, approvedVendors, customerQueue, activityLog, dashboardCuration, status, error } = useSelector(
-    (s) => s.admin,
-  )
+  const {
+    vendorQueue,
+    approvedVendors,
+    customerQueue,
+    activityLog,
+    dashboardCuration,
+    payouts,
+    payoutsStatus,
+    status,
+    error,
+  } = useSelector((s) => s.admin)
   const [section, setSection] = useState(sections[0])
   const [rejectingId, setRejectingId] = useState(null)
   const [reason, setReason] = useState('')
+  const [payoutAmounts, setPayoutAmounts] = useState({})
   const { showToast } = useToast()
 
   const allCategories = ['Electronics', 'Fashion', 'Home', 'Beauty', 'Books', 'Sports']
@@ -38,7 +49,10 @@ export default function AdminDashboard() {
   }, [user, navigate])
 
   useEffect(() => {
-    if (user?.role === 'admin') dispatch(fetchAdminDashboard())
+    if (user?.role === 'admin') {
+      dispatch(fetchAdminDashboard())
+      dispatch(fetchAdminPayouts())
+    }
   }, [dispatch, user])
 
   if (user && user.role !== 'admin') return null
@@ -56,6 +70,19 @@ export default function AdminDashboard() {
       .unwrap()
       .then(() => showToast('Vendor approved', 'success'))
       .catch((message) => showToast(message || 'Could not approve that vendor', 'error'))
+  }
+
+  function submitPayout(vendorId) {
+    const amount = Number(payoutAmounts[vendorId])
+    if (!amount || amount <= 0) return
+    dispatch(recordPayout({ vendorId, amount, note: 'Vendor payout' }))
+      .unwrap()
+      .then(() => {
+        showToast('Payout recorded', 'success')
+        setPayoutAmounts((a) => ({ ...a, [vendorId]: '' }))
+        dispatch(fetchAdminPayouts())
+      })
+      .catch((message) => showToast(message || 'Could not record that payout', 'error'))
   }
 
   function handleToggleFeatured(category) {
@@ -186,6 +213,65 @@ export default function AdminDashboard() {
                   <span className="text-xs font-medium bg-amber/15 text-amber rounded-full px-3 py-1.5">
                     Pending
                   </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {section === 'Payouts' && (
+            <div className="flex flex-col gap-4">
+              <p className="text-xs text-onLight/40 mb-1 flex items-center gap-1.5">
+                <Wallet size={14} /> Earnings are calculated from delivered orders only.
+              </p>
+              {payoutsStatus === 'loading' && payouts.length === 0 && (
+                <p className="text-sm text-onLight/45">Loading vendor balances…</p>
+              )}
+              {payoutsStatus !== 'loading' && payouts.length === 0 && (
+                <p className="text-sm text-onLight/45">No verified vendors yet.</p>
+              )}
+              {payouts.map((p) => (
+                <div key={p.vendorId} className="bg-surface border border-onLight/10 rounded-2xl p-5">
+                  <div className="flex justify-between items-start gap-4 flex-wrap">
+                    <div>
+                      <h3 className="font-medium">{p.vendorName}</h3>
+                      <p className="text-xs text-onLight/45 mt-1">{p.vendorEmail}</p>
+                    </div>
+                    <div className="flex gap-4 text-sm">
+                      <div>
+                        <div className="text-xs text-onLight/40">Earned</div>
+                        <div className="font-medium">₦{p.earned.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-onLight/40">Paid out</div>
+                        <div className="font-medium">₦{p.paidOut.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-leaf/70">Balance</div>
+                        <div className="font-medium text-leaf">₦{p.balance.toLocaleString()}</div>
+                      </div>
+                    </div>
+                  </div>
+                  {p.balance > 0 && (
+                    <div className="mt-4 pt-4 border-t border-onLight/10 flex gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        max={p.balance}
+                        value={payoutAmounts[p.vendorId] || ''}
+                        onChange={(e) =>
+                          setPayoutAmounts((a) => ({ ...a, [p.vendorId]: e.target.value }))
+                        }
+                        placeholder={`Up to ₦${p.balance.toLocaleString()}`}
+                        className="flex-1 h-10 px-3 rounded-lg border border-onLight/15 text-sm outline-none focus:border-leaf"
+                      />
+                      <button
+                        onClick={() => submitPayout(p.vendorId)}
+                        className="text-xs font-medium bg-leaf text-white rounded-lg px-4"
+                      >
+                        Record payout
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

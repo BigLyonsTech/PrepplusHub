@@ -47,6 +47,29 @@ export const toggleFeaturedCategory = createAsyncThunk(
   },
 )
 
+export const fetchAdminPayouts = createAsyncThunk(
+  'admin/fetchPayouts',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await api.getAdminPayouts()
+    } catch (e) {
+      return rejectWithValue(e.message)
+    }
+  },
+)
+
+export const recordPayout = createAsyncThunk(
+  'admin/recordPayout',
+  async ({ vendorId, amount, note }, { rejectWithValue }) => {
+    try {
+      await api.recordPayout(vendorId, { amount, note })
+      return vendorId
+    } catch (e) {
+      return rejectWithValue(e.message)
+    }
+  },
+)
+
 const initialState = {
   vendorQueue: [],
   approvedVendors: [],
@@ -56,6 +79,9 @@ const initialState = {
     featuredCategories: [],
     banners: [],
   },
+  payouts: [],
+  payoutsStatus: 'idle',
+  payoutsError: null,
   status: 'idle',
   error: null,
 }
@@ -104,6 +130,18 @@ const adminSlice = createSlice({
       .addCase(toggleFeaturedCategory.fulfilled, (state, action) => {
         state.dashboardCuration.featuredCategories = action.payload.featuredCategories || []
         state.dashboardCuration.banners = action.payload.banners || state.dashboardCuration.banners
+      })
+      .addCase(fetchAdminPayouts.pending, (state) => {
+        state.payoutsStatus = 'loading'
+        state.payoutsError = null
+      })
+      .addCase(fetchAdminPayouts.fulfilled, (state, action) => {
+        state.payoutsStatus = 'succeeded'
+        state.payouts = action.payload || []
+      })
+      .addCase(fetchAdminPayouts.rejected, (state, action) => {
+        state.payoutsStatus = 'failed'
+        state.payoutsError = action.payload || 'Failed to load vendor payouts'
       })
   },
 })
