@@ -10,6 +10,7 @@ import Reveal from '@/components/Reveal'
 import Button from '@/components/ui/Button'
 import {
   addToCart,
+  addToCartLocal,
   addVendorReview,
   addProductReview,
   fetchProduct,
@@ -136,7 +137,7 @@ export default function ProductDetailPage() {
                 size="lg"
                 onClick={() => {
                   if (!isAuthenticated) {
-                    setError('Log in to add items to your cart.')
+                    dispatch(addToCartLocal(product.id))
                     return
                   }
                   dispatch(addToCart(product.id))

@@ -6,7 +6,7 @@ import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import PageBackdrop from '@/components/PageBackdrop'
-import { addToCart, fetchProducts, fetchWishlist } from '@/store/slices/catalogSlice'
+import { addToCart, addToCartLocal, fetchProducts, fetchWishlist } from '@/store/slices/catalogSlice'
 import { useToast } from '@/components/ToastProvider'
 import ProductThumb from '@/components/ProductThumb'
 import PriceTag from '@/components/PriceTag'
@@ -26,7 +26,16 @@ export default function ProductsBrowse() {
   const [params, setParams] = useSearchParams()
   const [direction, setDirection] = useState(1)
   const category = params.get('category')
-  const filtered = category ? products.filter((p) => p.category === category) : products
+  const query = params.get('q')?.trim().toLowerCase()
+  const filtered = products
+    .filter((p) => !category || p.category === category)
+    .filter(
+      (p) =>
+        !query ||
+        p.name.toLowerCase().includes(query) ||
+        p.vendor?.toLowerCase().includes(query) ||
+        p.description?.toLowerCase().includes(query),
+    )
 
   // Fetch the full catalog once (not re-scoped per category) so swiping
   // between categories is instant client-side filtering, not a round-trip.
@@ -87,7 +96,23 @@ export default function ProductsBrowse() {
         {canSwipe && (
           <p className="text-xs text-onLight/35 mb-6">Swipe or use the arrows to browse the next category</p>
         )}
-        {!category && <div className="mb-6" />}
+
+        {query && (
+          <div className="flex items-center gap-2 mb-6">
+            <button
+              onClick={() => {
+                const next = new URLSearchParams(params)
+                next.delete('q')
+                setParams(next)
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-medium bg-onLight/5 text-onLight/70 rounded-full px-3 py-1.5 hover:bg-onLight/10"
+            >
+              "{params.get('q')}" <X size={12} />
+            </button>
+          </div>
+        )}
+
+        {!category && !query && <div className="mb-6" />}
 
         {catalogStatus === 'loading' && products.length === 0 && (
           <p className="text-sm text-onLight/45 mb-6">Loading products…</p>
@@ -104,9 +129,13 @@ export default function ProductsBrowse() {
           </div>
         )}
 
+        {catalogStatus !== 'loading' && products.length > 0 && filtered.length === 0 && (
+          <p className="text-sm text-onLight/45 mb-6">No products match{query ? ` "${params.get('q')}"` : ' that filter'}.</p>
+        )}
+
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
-            key={category || 'all'}
+            key={`${category || 'all'}-${query || ''}`}
             custom={direction}
             initial={{ opacity: 0, x: 40 * direction }}
             animate={{ opacity: 1, x: 0 }}
@@ -147,7 +176,7 @@ export default function ProductsBrowse() {
                       <button
                         onClick={() => {
                           if (!isAuthenticated) {
-                            window.location.href = '/auth?intent=customer'
+                            dispatch(addToCartLocal(p.id))
                             return
                           }
                           dispatch(addToCart(p.id))

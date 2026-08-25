@@ -9,11 +9,18 @@ import Button from '@/components/ui/Button'
 import { Field, Input } from '@/components/ui/Input'
 import FormError from '@/components/ui/FormError'
 import ProgressBar from '@/components/ui/ProgressBar'
-import { checkout, fetchCart, fetchProducts } from '@/store/slices/catalogSlice'
+import { checkout, guestCheckout, fetchCart, fetchProducts } from '@/store/slices/catalogSlice'
 import { cn } from '@/lib/utils'
 
 const STORE_ADDRESS = '23 Bisiriyu Lawal St, Shasha, Lagos 100275, Lagos Nigeria'
 const STORE_PHONES = ['091-355-55567', '091-373-59114']
+
+// Mirrors the backend's OrderService pricing exactly, so this preview
+// matches what checkout will actually charge. Packaging is a real per-order
+// cost and is folded silently into "Shipping" rather than its own line.
+const PACKAGING_FEE = 500
+const DELIVERY_FEE = 2500
+const FREE_DELIVERY_THRESHOLD = 50000
 
 export default function CheckoutFlow() {
   const dispatch = useDispatch()
@@ -21,6 +28,7 @@ export default function CheckoutFlow() {
   const cart = useSelector((s) => s.catalog.cart)
   const products = useSelector((s) => s.catalog.products)
   const user = useSelector((s) => s.auth.user)
+  const isAuthenticated = useSelector((s) => s.auth.isAuthenticated)
   const [step, setStep] = useState(1)
   const [placed, setPlaced] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -29,37 +37,45 @@ export default function CheckoutFlow() {
   const [fulfillmentType, setFulfillmentType] = useState('DELIVERY')
   const [delivery, setDelivery] = useState({
     fullName: user?.name || '',
+    email: user?.email || '',
     address: '',
     phone: user?.phone || '',
   })
 
   useEffect(() => {
-    Promise.all([dispatch(fetchProducts()), dispatch(fetchCart())]).finally(() =>
-      setInitialLoading(false),
-    )
-  }, [dispatch])
+    // Guests never had a server cart to fetch — their cart lives in Redux
+    // (seeded from localStorage), so only authenticated checkout needs this.
+    const tasks = [dispatch(fetchProducts())]
+    if (isAuthenticated) tasks.push(dispatch(fetchCart()))
+    Promise.all(tasks).finally(() => setInitialLoading(false))
+  }, [dispatch, isAuthenticated])
 
-  const total = cart.reduce((sum, c) => {
+  const subtotal = cart.reduce((sum, c) => {
     const p = products.find((p) => p.id === c.productId)
     return sum + (p ? p.price * c.quantity : 0)
   }, 0)
+  const deliveryFee = fulfillmentType === 'PICKUP' || subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE
+  const shippingFee = deliveryFee + PACKAGING_FEE
+  const total = subtotal + shippingFee
 
   async function placeOrder() {
     setLoading(true)
     setError('')
-    const result = await dispatch(
-      checkout({
-        fullName: delivery.fullName,
-        address: fulfillmentType === 'DELIVERY' ? delivery.address : undefined,
-        phone: delivery.phone,
-        fulfillmentType,
-      }),
-    )
+    const shared = {
+      fullName: delivery.fullName,
+      address: fulfillmentType === 'DELIVERY' ? delivery.address : undefined,
+      phone: delivery.phone,
+      fulfillmentType,
+    }
+    const result = isAuthenticated
+      ? await dispatch(checkout(shared))
+      : await dispatch(guestCheckout({ ...shared, email: delivery.email, items: cart }))
     setLoading(false)
-    if (checkout.fulfilled.match(result)) {
+    const succeeded = isAuthenticated ? checkout.fulfilled.match(result) : guestCheckout.fulfilled.match(result)
+    if (succeeded) {
       setPlaced(true)
     } else {
-      setError(result.payload || 'Checkout failed — are you logged in?')
+      setError(result.payload || 'Checkout failed')
     }
   }
 
@@ -77,8 +93,25 @@ export default function CheckoutFlow() {
           </motion.div>
           <h1 className="font-display text-3xl font-semibold mb-2">Order placed</h1>
           <p className="text-onLight/50 mb-8">We&apos;ll email you a confirmation shortly.</p>
-          <Button size="lg" onClick={() => navigate('/customer/dashboard')}>
-            Back to dashboard
+          <Button
+            size="lg"
+            onClick={() => navigate(isAuthenticated ? '/customer/dashboard' : '/products')}
+          >
+            {isAuthenticated ? 'Back to dashboard' : 'Continue shopping'}
+          </Button>
+        </div>
+      </PageBackdrop>
+    )
+  }
+
+  if (!initialLoading && cart.length === 0) {
+    return (
+      <PageBackdrop>
+        <Navbar />
+        <div className="container-page py-24 text-center">
+          <p className="text-onLight/50 mb-6">Your cart is empty.</p>
+          <Button size="lg" onClick={() => navigate('/products')}>
+            Browse products
           </Button>
         </div>
       </PageBackdrop>
@@ -125,6 +158,18 @@ export default function CheckoutFlow() {
                     required
                   />
                 </Field>
+
+                {!isAuthenticated && (
+                  <Field label="Email" hint="So we can send your order confirmation — no account needed">
+                    <Input
+                      type="email"
+                      placeholder="ada@example.com"
+                      value={delivery.email}
+                      onChange={(e) => setDelivery((d) => ({ ...d, email: e.target.value }))}
+                      required
+                    />
+                  </Field>
+                )}
 
                 {fulfillmentType === 'DELIVERY' ? (
                   <Field label="Address">
@@ -183,6 +228,12 @@ export default function CheckoutFlow() {
                       </div>
                     )
                   })}
+                  <div className="flex justify-between text-sm text-onLight/60 px-3 pt-2">
+                    <span>Shipping</span><span>₦{shippingFee.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-semibold px-3 pt-1 border-t border-onLight/10 mt-1">
+                    <span>Total</span><span>₦{total.toLocaleString()}</span>
+                  </div>
                 </div>
                 <FormError className="mt-4">{error}</FormError>
               </motion.div>
@@ -199,6 +250,7 @@ export default function CheckoutFlow() {
                 (step === 1 &&
                   (!delivery.fullName ||
                     !delivery.phone ||
+                    (!isAuthenticated && !delivery.email) ||
                     (fulfillmentType === 'DELIVERY' && !delivery.address)))
               }
               onClick={() => (step < 3 ? setStep(step + 1) : placeOrder())}
@@ -216,6 +268,12 @@ export default function CheckoutFlow() {
             <>
               <div className="flex justify-between text-sm text-onLight/60 mb-2">
                 <span>Items</span><span>{cart.reduce((a, c) => a + c.quantity, 0)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-onLight/60 mb-2">
+                <span>Subtotal</span><span>₦{subtotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm text-onLight/60 mb-2">
+                <span>Shipping</span><span>₦{shippingFee.toLocaleString()}</span>
               </div>
               <div className="flex justify-between font-semibold pt-3 border-t border-onLight/10">
                 <span>Total</span><span>₦{total.toLocaleString()}</span>

@@ -1,6 +1,7 @@
 package com.marketplace.backend.controller;
 
 import com.marketplace.backend.dto.CheckoutRequest;
+import com.marketplace.backend.dto.GuestCheckoutRequest;
 import com.marketplace.backend.dto.UpdateOrderStatusRequest;
 import com.marketplace.backend.model.Order;
 import com.marketplace.backend.security.SecurityUtils;
@@ -38,6 +39,11 @@ public class OrderController {
     @PostMapping("/checkout")
     public Order checkout(@Valid @RequestBody CheckoutRequest request) {
         return orderService.checkout(SecurityUtils.requireUserId(), request);
+    }
+
+    @PostMapping("/guest-checkout")
+    public Order guestCheckout(@Valid @RequestBody GuestCheckoutRequest request) {
+        return orderService.guestCheckout(request);
     }
 
     @PatchMapping("/{id}/status")

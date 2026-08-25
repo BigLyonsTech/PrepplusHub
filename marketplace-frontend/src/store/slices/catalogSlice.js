@@ -1,6 +1,25 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { api } from '@/lib/api'
 
+const GUEST_CART_KEY = 'prepplushub_guest_cart'
+
+function loadGuestCart() {
+  try {
+    const raw = localStorage.getItem(GUEST_CART_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function saveGuestCart(cart) {
+  try {
+    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart))
+  } catch {
+    // best-effort only — a guest cart is a convenience, not durable state
+  }
+}
+
 export const fetchProducts = createAsyncThunk('catalog/fetchProducts', async (category, { rejectWithValue }) => {
   try {
     return await api.getProducts(category || undefined)
@@ -169,6 +188,14 @@ export const checkout = createAsyncThunk('catalog/checkout', async (body, { reje
   }
 })
 
+export const guestCheckout = createAsyncThunk('catalog/guestCheckout', async (body, { rejectWithValue }) => {
+  try {
+    return await api.guestCheckout(body)
+  } catch (e) {
+    return rejectWithValue(e.message)
+  }
+})
+
 export const fetchProductReviews = createAsyncThunk(
   'catalog/fetchProductReviews',
   async (productId, { rejectWithValue }) => {
@@ -218,7 +245,9 @@ const initialState = {
   currentProduct: null,
   vendorProducts: [],
   vendorProductsStatus: 'idle',
-  cart: [],
+  // Seeded from localStorage so a guest's cart survives a page refresh —
+  // overwritten by the server cart the moment fetchCart succeeds (logged in).
+  cart: loadGuestCart(),
   cartStatus: 'idle',
   cartError: null,
   wishlist: [],
@@ -251,11 +280,21 @@ const catalogSlice = createSlice({
   name: 'catalog',
   initialState,
   reducers: {
-    // Optimistic local add when not logged in — UI can still preview
+    // Guest cart — kept client-side only (localStorage) until guest checkout
+    // sends it inline, or fetchCart.fulfilled overwrites it after login.
     addToCartLocal(state, action) {
       const existing = state.cart.find((c) => c.productId === action.payload)
       if (existing) existing.quantity += 1
       else state.cart.push({ productId: action.payload, quantity: 1 })
+      saveGuestCart(state.cart)
+    },
+    removeFromCartLocal(state, action) {
+      state.cart = state.cart.filter((c) => c.productId !== action.payload)
+      saveGuestCart(state.cart)
+    },
+    clearCartLocal(state) {
+      state.cart = []
+      saveGuestCart([])
     },
   },
   extraReducers: (builder) => {
@@ -307,6 +346,7 @@ const catalogSlice = createSlice({
       .addCase(fetchCart.fulfilled, (state, action) => {
         state.cartStatus = 'succeeded'
         state.cart = action.payload || []
+        saveGuestCart([]) // server cart is authoritative once logged in
       })
       .addCase(fetchCart.rejected, (state, action) => {
         state.cartStatus = 'failed'
@@ -398,6 +438,10 @@ const catalogSlice = createSlice({
           state.orders = [action.payload, ...state.orders]
         }
       })
+      .addCase(guestCheckout.fulfilled, (state) => {
+        state.cart = []
+        saveGuestCart([])
+      })
       .addCase(fetchProductReviews.fulfilled, (state, action) => {
         const { productId, reviews } = action.payload
         state.productReviews = [
@@ -421,5 +465,5 @@ const catalogSlice = createSlice({
   },
 })
 
-export const { addToCartLocal } = catalogSlice.actions
+export const { addToCartLocal, removeFromCartLocal, clearCartLocal } = catalogSlice.actions
 export default catalogSlice.reducer

@@ -18,11 +18,15 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final ActivityService activityService;
+    private final EmailService emailService;
 
-    public UserService(UserRepository userRepository, JwtService jwtService, ActivityService activityService) {
+    public UserService(
+            UserRepository userRepository, JwtService jwtService, ActivityService activityService, EmailService emailService
+    ) {
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.activityService = activityService;
+        this.emailService = emailService;
     }
 
     public AuthResponse confirmRole(String userId, RoleRequest request) {
@@ -72,6 +76,7 @@ public class UserService {
         user.setUpdatedAt(Instant.now());
         userRepository.save(user);
         activityService.log(userId, "vendor_eligibility_submitted");
+        emailService.notifyAdminNewVendorApplication(request.getBusinessName(), user.getEmail());
         return UserResponse.from(user);
     }
 

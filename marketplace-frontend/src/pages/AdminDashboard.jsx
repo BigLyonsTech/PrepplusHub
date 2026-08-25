@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Check, X, Activity, LayoutGrid, Wallet } from 'lucide-react'
 import Navbar from '@/components/Navbar'
@@ -34,7 +34,11 @@ export default function AdminDashboard() {
     status,
     error,
   } = useSelector((s) => s.admin)
-  const [section, setSection] = useState(sections[0])
+  const [searchParams] = useSearchParams()
+  const requestedSection = searchParams.get('section')
+  const [section, setSection] = useState(
+    sections.includes(requestedSection) ? requestedSection : sections[0],
+  )
   const [rejectingId, setRejectingId] = useState(null)
   const [reason, setReason] = useState('')
   const [payoutAmounts, setPayoutAmounts] = useState({})
