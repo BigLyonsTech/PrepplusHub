@@ -1,11 +1,13 @@
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { ShoppingBag, User2 } from 'lucide-react'
+import { ShoppingBag, User2, Search, X } from 'lucide-react'
 import Button from './ui/Button'
 import Logo3D from './Logo3D'
 import ThemeToggle from './ThemeToggle'
 import { cn } from '@/lib/utils'
 import { logout } from '@/store/slices/authSlice'
+import { fetchCart } from '@/store/slices/catalogSlice'
 
 const navLinks = [
   { to: '/products', label: 'Browse' },
@@ -16,7 +18,26 @@ export default function Navbar() {
   const dispatch = useDispatch()
   const { user, isAuthenticated } = useSelector((s) => s.auth)
   const cartCount = useSelector((s) => s.catalog.cart.reduce((a, c) => a + c.quantity, 0))
+  const cartStatus = useSelector((s) => s.catalog.cartStatus)
   const navigate = useNavigate()
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [query, setQuery] = useState('')
+
+  function submitSearch(e) {
+    e.preventDefault()
+    const q = query.trim()
+    if (!q) return
+    navigate(`/products?q=${encodeURIComponent(q)}`)
+    setSearchOpen(false)
+    setQuery('')
+  }
+
+  // Navbar is rendered fresh on every page (not a persistent layout), so the
+  // badge would otherwise only reflect the cart after visiting Cart/Checkout.
+  // cartStatus gates this to a one-time fetch per session, not per navigation.
+  useEffect(() => {
+    if (isAuthenticated && cartStatus === 'idle') dispatch(fetchCart())
+  }, [dispatch, isAuthenticated, cartStatus])
 
   return (
     <>
@@ -72,9 +93,40 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-1.5">
+            {searchOpen ? (
+              <form onSubmit={submitSearch} className="flex items-center">
+                <input
+                  autoFocus
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onBlur={() => !query && setSearchOpen(false)}
+                  placeholder="Search products…"
+                  className="w-36 sm:w-52 h-9 px-3 rounded-full border border-onLight/15 bg-surface text-sm outline-none focus:border-leaf"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchOpen(false)
+                    setQuery('')
+                  }}
+                  aria-label="Close search"
+                  className="p-2.5 rounded-full hover:bg-onLight/5 transition-colors"
+                >
+                  <X size={17} className="text-onLight/60" strokeWidth={1.75} />
+                </button>
+              </form>
+            ) : (
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="p-2.5 rounded-full hover:bg-onLight/5 transition-colors"
+                aria-label="Search"
+              >
+                <Search size={19} className="text-onLight/70" strokeWidth={1.75} />
+              </button>
+            )}
             <ThemeToggle />
             <button
-              onClick={() => navigate(isAuthenticated ? '/checkout' : '/auth?intent=customer')}
+              onClick={() => navigate('/checkout')}
               className="relative p-2.5 rounded-full hover:bg-onLight/5 transition-colors"
               aria-label="Cart"
             >

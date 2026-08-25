@@ -152,6 +152,8 @@ export default function LandingPage() {
 
       <TrustBar />
 
+      <CategoryShowcase products={products} />
+
       {/* Trending — an actual slideshow */}
       <section className="bg-surface py-24">
         <div className="container-page">
@@ -169,8 +171,6 @@ export default function LandingPage() {
           </Reveal>
         </div>
       </section>
-
-      <CategoryShowcase products={products} />
 
       <FlashSaleBanner />
 
