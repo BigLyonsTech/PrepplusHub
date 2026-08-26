@@ -43,9 +43,13 @@ export default function Navbar() {
     <>
       <header className="fixed top-0 inset-x-0 z-40 bg-paper/95 border-b border-onLight/8">
         <nav className="container-page flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2.5 font-display text-xl font-semibold tracking-tight">
+          <Link to="/" className="flex items-center gap-2.5 font-display text-xl font-semibold tracking-tight shrink-0">
             <Logo3D />
-            <span className="text-gradient-brand">PrepplusHub</span>
+            {/* Icon mark alone on the narrowest phones — with search + theme +
+                cart + Get Started all competing for the same row, the full
+                wordmark was the difference between fitting and the "Get
+                Started" button wrapping and getting pushed off-screen. */}
+            <span className="hidden sm:inline text-gradient-brand">PrepplusHub</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-1">
@@ -92,7 +96,7 @@ export default function Navbar() {
             )}
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 sm:gap-1.5">
             {searchOpen ? (
               <form onSubmit={submitSearch} className="flex items-center">
                 <input
@@ -101,7 +105,7 @@ export default function Navbar() {
                   onChange={(e) => setQuery(e.target.value)}
                   onBlur={() => !query && setSearchOpen(false)}
                   placeholder="Search products…"
-                  className="w-36 sm:w-52 h-9 px-3 rounded-full border border-onLight/15 bg-surface text-sm outline-none focus:border-leaf"
+                  className="w-32 sm:w-52 h-9 px-3 rounded-full border border-onLight/15 bg-surface text-sm outline-none focus:border-leaf"
                 />
                 <button
                   type="button"
@@ -110,7 +114,7 @@ export default function Navbar() {
                     setQuery('')
                   }}
                   aria-label="Close search"
-                  className="p-2.5 rounded-full hover:bg-onLight/5 transition-colors"
+                  className="p-2 sm:p-2.5 rounded-full hover:bg-onLight/5 transition-colors"
                 >
                   <X size={17} className="text-onLight/60" strokeWidth={1.75} />
                 </button>
@@ -118,49 +122,60 @@ export default function Navbar() {
             ) : (
               <button
                 onClick={() => setSearchOpen(true)}
-                className="p-2.5 rounded-full hover:bg-onLight/5 transition-colors"
+                className="p-2 sm:p-2.5 rounded-full hover:bg-onLight/5 transition-colors"
                 aria-label="Search"
               >
                 <Search size={19} className="text-onLight/70" strokeWidth={1.75} />
               </button>
             )}
-            <ThemeToggle />
-            <button
-              onClick={() => navigate('/checkout')}
-              className="relative p-2.5 rounded-full hover:bg-onLight/5 transition-colors"
-              aria-label="Cart"
-            >
-              <ShoppingBag size={19} className="text-onLight/70" strokeWidth={1.75} />
-              {cartCount > 0 && (
-                <span className="absolute top-1 right-1 bg-leaf text-white text-[10px] leading-none w-4 h-4 rounded-full flex items-center justify-center">
-                  {cartCount}
-                </span>
+            {/* Everything below collapses away while search is open on a
+                narrow screen, since the open search input already fills the
+                row — this is what actually fixes the overflow, not just the
+                individual paddings shrinking. */}
+            <div className={cn('flex items-center gap-1 sm:gap-1.5', searchOpen && 'hidden sm:flex')}>
+              <ThemeToggle />
+              <button
+                onClick={() => navigate('/checkout')}
+                className="relative p-2 sm:p-2.5 rounded-full hover:bg-onLight/5 transition-colors"
+                aria-label="Cart"
+              >
+                <ShoppingBag size={19} className="text-onLight/70" strokeWidth={1.75} />
+                {cartCount > 0 && (
+                  <span className="absolute top-1 right-1 bg-leaf text-white text-[10px] leading-none w-4 h-4 rounded-full flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+              {isAuthenticated ? (
+                <>
+                  <button
+                    onClick={() => navigate('/profile')}
+                    className="p-2 sm:p-2.5 rounded-full hover:bg-onLight/5 transition-colors"
+                    aria-label="Profile"
+                  >
+                    <User2 size={19} className="text-onLight/70" strokeWidth={1.75} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      dispatch(logout())
+                      navigate('/')
+                    }}
+                    className="text-xs text-onLight/50 hover:text-onLight px-2 py-1.5 whitespace-nowrap"
+                  >
+                    Log out
+                  </button>
+                </>
+              ) : (
+                <Button
+                  size="md"
+                  variant="primary"
+                  onClick={() => navigate('/auth')}
+                  className="whitespace-nowrap shrink-0 px-3.5 sm:px-5"
+                >
+                  Get Started
+                </Button>
               )}
-            </button>
-            {isAuthenticated ? (
-              <>
-                <button
-                  onClick={() => navigate('/profile')}
-                  className="p-2.5 rounded-full hover:bg-onLight/5 transition-colors"
-                  aria-label="Profile"
-                >
-                  <User2 size={19} className="text-onLight/70" strokeWidth={1.75} />
-                </button>
-                <button
-                  onClick={() => {
-                    dispatch(logout())
-                    navigate('/')
-                  }}
-                  className="text-xs text-onLight/50 hover:text-onLight px-2 py-1.5"
-                >
-                  Log out
-                </button>
-              </>
-            ) : (
-              <Button size="md" variant="primary" onClick={() => navigate('/auth')} className={cn('ml-1.5')}>
-                Get Started
-              </Button>
-            )}
+            </div>
           </div>
         </nav>
       </header>
