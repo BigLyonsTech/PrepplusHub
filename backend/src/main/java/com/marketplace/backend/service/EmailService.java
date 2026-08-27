@@ -3,35 +3,50 @@ package com.marketplace.backend.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Sends mail via Resend's HTTP API rather than raw SMTP — Render blocks
+ * outbound SMTP ports (25/465/587) on its plans, so a JavaMailSender-based
+ * approach can never connect there regardless of credentials. An HTTPS API
+ * call sidesteps that entirely.
+ */
 @Service
 public class EmailService {
 
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
-    private final JavaMailSender mailSender;
+    private final RestClient restClient;
     private final boolean configured;
     private final String from;
     private final String adminEmail;
     private final String frontendUrl;
 
     public EmailService(
-            JavaMailSender mailSender,
-            @Value("${spring.mail.host:}") String host,
-            @Value("${spring.mail.username:}") String username,
-            @Value("${spring.mail.password:}") String password,
-            @Value("${app.mail.from:PrepplusHub <no-reply@prepplushub.com>}") String from,
+            @Value("${app.notifications.resend-api-key:}") String apiKey,
+            @Value("${app.mail.from:PrepplusHub <onboarding@resend.dev>}") String from,
             @Value("${app.notifications.admin-email:}") String adminEmail,
             @Value("${app.frontend-url:http://localhost:5173}") String frontendUrl
     ) {
-        this.mailSender = mailSender;
-        this.configured = !host.isBlank() && !username.isBlank() && !password.isBlank();
+        this.configured = !apiKey.isBlank();
         this.from = from;
         this.adminEmail = adminEmail;
         this.frontendUrl = frontendUrl;
+
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(5000);
+        requestFactory.setReadTimeout(5000);
+        this.restClient = RestClient.builder()
+                .baseUrl("https://api.resend.com")
+                .requestFactory(requestFactory)
+                .defaultHeader("Authorization", "Bearer " + apiKey)
+                .build();
     }
 
     public boolean isConfigured() {
@@ -81,12 +96,17 @@ public class EmailService {
     private boolean send(String toEmail, String subject, String body) {
         if (!configured) return false;
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(from);
-            message.setTo(toEmail);
-            message.setSubject(subject);
-            message.setText(body);
-            mailSender.send(message);
+            restClient.post()
+                    .uri("/emails")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of(
+                            "from", from,
+                            "to", List.of(toEmail),
+                            "subject", subject,
+                            "text", body
+                    ))
+                    .retrieve()
+                    .toBodilessEntity();
             return true;
         } catch (Exception e) {
             log.error("Failed to send email to {}: {}", toEmail, subject, e);
