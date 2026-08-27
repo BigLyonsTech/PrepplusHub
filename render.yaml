@@ -32,3 +32,5 @@ services:
         sync: false
       - key: APP_FRONTEND_URL
         sync: false
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false

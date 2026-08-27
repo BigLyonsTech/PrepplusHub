@@ -22,6 +22,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final ActivityService activityService;
     private final EmailService emailService;
+    private final GoogleAuthService googleAuthService;
     private final SecureRandom random = new SecureRandom();
 
     @Value("${app.otp.length:6}")
@@ -43,13 +44,15 @@ public class AuthService {
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             ActivityService activityService,
-            EmailService emailService
+            EmailService emailService,
+            GoogleAuthService googleAuthService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.activityService = activityService;
         this.emailService = emailService;
+        this.googleAuthService = googleAuthService;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -145,6 +148,46 @@ public class AuthService {
         return AuthResponse.token(token, UserResponse.from(user));
     }
 
+    /**
+     * Google already verified this email address, so a Google sign-in both
+     * registers new accounts and logs in existing ones in one step — no OTP,
+     * and no KYC form is collected up front (unlike password registration).
+     * It also doubles as a rescue path for an existing account stuck
+     * unverified because an OTP email never arrived.
+     */
+    public AuthResponse loginWithGoogle(GoogleAuthRequest request) {
+        GoogleAuthService.TokenInfo info = googleAuthService.verify(request.getCredential());
+        String email = info.email().toLowerCase().trim();
+
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            user = new User();
+            user.setName(info.name() != null && !info.name().isBlank() ? info.name() : email);
+            user.setEmail(email);
+            user.setPassword(passwordEncoder.encode(randomUnusablePassword()));
+            user.setOnboardingStage("role_selection");
+            user.setEmailVerified(true);
+            user.setUpdatedAt(Instant.now());
+            userRepository.save(user);
+            activityService.log(user.getId(), "register_google");
+        } else if (!user.isEmailVerified()) {
+            user.setEmailVerified(true);
+            user.setOtpCode(null);
+            user.setOtpExpiresAt(null);
+            if ("kyc_pending".equals(user.getOnboardingStage())) {
+                user.setOnboardingStage("role_selection");
+            }
+            user.setUpdatedAt(Instant.now());
+            userRepository.save(user);
+            activityService.log(user.getId(), "login_google");
+        } else {
+            activityService.log(user.getId(), "login_google");
+        }
+
+        String token = jwtService.generateToken(user.getId(), user.getEmail(), user.getRole());
+        return AuthResponse.token(token, UserResponse.from(user));
+    }
+
     public AuthResponse resendOtp(String email) {
         User user = userRepository.findByEmail(email.toLowerCase().trim())
                 .orElseThrow(() -> new ApiException("Account not found", HttpStatus.NOT_FOUND));
@@ -168,6 +211,14 @@ public class AuthService {
         int bound = (int) Math.pow(10, otpLength);
         int code = random.nextInt(bound / 10, bound);
         return String.valueOf(code);
+    }
+
+    /** A Google-only account still needs *some* password hash — PasswordEncoder.matches
+     * throws on a null encoded value — but it must never be guessable or usable for login. */
+    private String randomUnusablePassword() {
+        byte[] bytes = new byte[32];
+        random.nextBytes(bytes);
+        return java.util.Base64.getEncoder().encodeToString(bytes);
     }
 
     /**

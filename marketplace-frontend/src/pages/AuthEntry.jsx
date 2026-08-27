@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
 import BackButton from '@/components/ui/BackButton'
+import GoogleSignInButton from '@/components/GoogleSignInButton'
 import { setRegistrationIntent } from '@/store/slices/authSlice'
 
 export default function AuthEntry() {
@@ -43,6 +44,12 @@ export default function AuthEntry() {
             <Button size="lg" variant="outline" onClick={() => navigate('/login')} className="w-full">
               Log in
             </Button>
+            <div className="flex items-center gap-3 my-1">
+              <div className="h-px flex-1 bg-onLight/10" />
+              <span className="text-xs text-onLight/40">or</span>
+              <div className="h-px flex-1 bg-onLight/10" />
+            </div>
+            <GoogleSignInButton />
           </div>
         </motion.div>
       </div>

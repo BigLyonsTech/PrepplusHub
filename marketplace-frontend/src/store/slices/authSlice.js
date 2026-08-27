@@ -37,6 +37,17 @@ export const verifyOtp = createAsyncThunk('auth/verifyOtp', async (body, { rejec
   }
 })
 
+export const loginWithGoogle = createAsyncThunk(
+  'auth/loginWithGoogle',
+  async (credential, { rejectWithValue }) => {
+    try {
+      return await api.googleAuth(credential)
+    } catch (e) {
+      return rejectWithValue(e.message)
+    }
+  },
+)
+
 export const fetchMe = createAsyncThunk('auth/me', async (_, { rejectWithValue }) => {
   try {
     if (!getToken()) throw new Error('No session')
@@ -165,6 +176,19 @@ const authSlice = createSlice({
       .addCase(verifyOtp.rejected, (state, action) => {
         state.status = 'failed'
         state.error = action.payload || 'OTP verification failed'
+      })
+
+      .addCase(loginWithGoogle.pending, (state) => {
+        state.status = 'loading'
+        state.error = null
+      })
+      .addCase(loginWithGoogle.fulfilled, (state, action) => {
+        state.status = 'succeeded'
+        applyAuth(state, action.payload)
+      })
+      .addCase(loginWithGoogle.rejected, (state, action) => {
+        state.status = 'failed'
+        state.error = action.payload || 'Google sign-in failed'
       })
 
       .addCase(fetchMe.fulfilled, (state, action) => {

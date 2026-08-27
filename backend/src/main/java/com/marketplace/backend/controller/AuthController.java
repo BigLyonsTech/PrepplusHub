@@ -38,6 +38,11 @@ public class AuthController {
         return authService.login(request);
     }
 
+    @PostMapping("/google")
+    public AuthResponse google(@Valid @RequestBody GoogleAuthRequest request) {
+        return authService.loginWithGoogle(request);
+    }
+
     @GetMapping("/me")
     public UserResponse me() {
         return authService.me(SecurityUtils.requireUserId());
