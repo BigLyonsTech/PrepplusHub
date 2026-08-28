@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import {
   addToCart,
+  removeFromCart,
   fetchProducts,
   fetchCart,
   fetchOrders,
@@ -197,7 +198,20 @@ export default function CustomerDashboard() {
                           <div className="font-medium text-sm">{p.name}</div>
                           <div className="text-xs text-onLight/45">Qty {c.quantity}</div>
                         </div>
-                        <div className="text-sm font-medium">₦{(p.price * c.quantity).toLocaleString()}</div>
+                        <div className="flex items-center gap-3">
+                          <div className="text-sm font-medium">₦{(p.price * c.quantity).toLocaleString()}</div>
+                          <button
+                            onClick={() =>
+                              dispatch(removeFromCart(c.productId))
+                                .unwrap()
+                                .catch((message) => showToast(message || 'Could not remove that item', 'error'))
+                            }
+                            aria-label={`Remove ${p.name} from cart`}
+                            className="shrink-0 p-1.5 rounded-full hover:bg-onLight/5"
+                          >
+                            <X size={14} className="text-onLight/40" />
+                          </button>
+                        </div>
                       </div>
                     )
                   })}

@@ -2,14 +2,22 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, MapPin, Phone } from 'lucide-react'
+import { Check, MapPin, Phone, X } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
 import { Field, Input } from '@/components/ui/Input'
 import FormError from '@/components/ui/FormError'
 import ProgressBar from '@/components/ui/ProgressBar'
-import { checkout, guestCheckout, fetchCart, fetchProducts } from '@/store/slices/catalogSlice'
+import {
+  checkout,
+  guestCheckout,
+  fetchCart,
+  fetchProducts,
+  removeFromCart,
+  removeFromCartLocal,
+} from '@/store/slices/catalogSlice'
+import { useToast } from '@/components/ToastProvider'
 import { cn } from '@/lib/utils'
 
 const STORE_ADDRESS = '23 Bisiriyu Lawal St, Shasha, Lagos 100275, Lagos Nigeria'
@@ -29,6 +37,7 @@ export default function CheckoutFlow() {
   const products = useSelector((s) => s.catalog.products)
   const user = useSelector((s) => s.auth.user)
   const isAuthenticated = useSelector((s) => s.auth.isAuthenticated)
+  const { showToast } = useToast()
   const [step, setStep] = useState(1)
   const [placed, setPlaced] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -57,6 +66,16 @@ export default function CheckoutFlow() {
   const deliveryFee = fulfillmentType === 'PICKUP' || subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE
   const shippingFee = deliveryFee + PACKAGING_FEE
   const total = subtotal + shippingFee
+
+  function handleRemove(productId) {
+    if (isAuthenticated) {
+      dispatch(removeFromCart(productId))
+        .unwrap()
+        .catch((message) => showToast(message || 'Could not remove that item', 'error'))
+    } else {
+      dispatch(removeFromCartLocal(productId))
+    }
+  }
 
   async function placeOrder() {
     setLoading(true)
@@ -222,9 +241,19 @@ export default function CheckoutFlow() {
                     const p = products.find((p) => p.id === c.productId)
                     if (!p) return null
                     return (
-                      <div key={c.productId} className="flex justify-between text-sm bg-surface border border-onLight/10 rounded-lg p-3">
+                      <div key={c.productId} className="flex justify-between items-center text-sm bg-surface border border-onLight/10 rounded-lg p-3">
                         <span>{p.name} × {c.quantity}</span>
-                        <span>₦{(p.price * c.quantity).toLocaleString()}</span>
+                        <div className="flex items-center gap-3">
+                          <span>₦{(p.price * c.quantity).toLocaleString()}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemove(c.productId)}
+                            aria-label={`Remove ${p.name} from cart`}
+                            className="shrink-0 p-1 rounded-full hover:bg-onLight/5"
+                          >
+                            <X size={14} className="text-onLight/40" />
+                          </button>
+                        </div>
                       </div>
                     )
                   })}
