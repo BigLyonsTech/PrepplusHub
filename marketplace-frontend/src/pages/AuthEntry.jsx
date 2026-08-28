@@ -50,6 +50,13 @@ export default function AuthEntry() {
               <div className="h-px flex-1 bg-onLight/10" />
             </div>
             <GoogleSignInButton />
+            <button
+              type="button"
+              onClick={() => navigate('/products')}
+              className="text-sm text-onLight/50 hover:text-leaf-dim mt-2"
+            >
+              Continue as a guest — browse and buy without an account
+            </button>
           </div>
         </motion.div>
       </div>
