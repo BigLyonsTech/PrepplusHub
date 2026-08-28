@@ -18,6 +18,7 @@ import TrustBar from '@/components/TrustBar'
 import FlashSaleBanner from '@/components/FlashSaleBanner'
 import VideoEmbed from '@/components/VideoEmbed'
 import { CATEGORY_TINTS } from '@/lib/categoryTints'
+import { routeForUser } from '@/lib/routing'
 
 const stats = [
   { icon: Store, label: 'Verified vendors', value: '480+' },
@@ -41,6 +42,8 @@ const AFTER_INTRO = 0.92
 export default function LandingPage() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const isAuthenticated = useSelector((s) => s.auth.isAuthenticated)
+  const user = useSelector((s) => s.auth.user)
   const products = useSelector((s) => s.catalog.products)
   const carouselProducts = products.filter((p) => p.image)
 
@@ -105,9 +108,15 @@ export default function LandingPage() {
               <Button size="lg" variant="primary" onClick={() => navigate('/products')}>
                 View Products
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate('/auth')}>
-                Get Started
-              </Button>
+              {isAuthenticated ? (
+                <Button size="lg" variant="outline" onClick={() => navigate(routeForUser(user))}>
+                  Go to dashboard
+                </Button>
+              ) : (
+                <Button size="lg" variant="outline" onClick={() => navigate('/auth')}>
+                  Get Started
+                </Button>
+              )}
             </motion.div>
 
             {/* Quick category shortcuts — colorful circular icons, real links */}
