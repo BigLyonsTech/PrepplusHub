@@ -9,4 +9,5 @@ public interface ProductRepository extends MongoRepository<Product, String> {
     List<Product> findByActiveTrue();
     List<Product> findByCategoryIgnoreCaseAndActiveTrue(String category);
     List<Product> findByVendorIdAndActiveTrue(String vendorId);
+    List<Product> findByVendorId(String vendorId);
 }

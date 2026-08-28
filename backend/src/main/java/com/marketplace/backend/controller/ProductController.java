@@ -34,6 +34,11 @@ public class ProductController {
         return productService.listByVendor(vendorId);
     }
 
+    @GetMapping("/vendor/mine")
+    public List<Product> mine() {
+        return productService.listMineForVendor(SecurityUtils.requireUserId());
+    }
+
     @PostMapping
     public Product create(@Valid @RequestBody ProductRequest request) {
         return productService.create(SecurityUtils.requireUserId(), request);
@@ -42,5 +47,15 @@ public class ProductController {
     @PutMapping("/{id}")
     public Product update(@PathVariable String id, @Valid @RequestBody ProductRequest request) {
         return productService.update(SecurityUtils.requireUserId(), id, request);
+    }
+
+    @PostMapping("/{id}/deactivate")
+    public Product deactivate(@PathVariable String id) {
+        return productService.setActiveByOwner(SecurityUtils.requireUserId(), id, false);
+    }
+
+    @PostMapping("/{id}/activate")
+    public Product activate(@PathVariable String id) {
+        return productService.setActiveByOwner(SecurityUtils.requireUserId(), id, true);
     }
 }

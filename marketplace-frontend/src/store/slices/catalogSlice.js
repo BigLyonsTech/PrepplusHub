@@ -38,9 +38,9 @@ export const fetchProduct = createAsyncThunk('catalog/fetchProduct', async (id, 
 
 export const fetchVendorProducts = createAsyncThunk(
   'catalog/fetchVendorProducts',
-  async (vendorId, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      return await api.getVendorProducts(vendorId)
+      return await api.getMyProducts()
     } catch (e) {
       return rejectWithValue(e.message)
     }
@@ -60,6 +60,28 @@ export const updateProduct = createAsyncThunk(
   async ({ id, body }, { rejectWithValue }) => {
     try {
       return await api.updateProduct(id, body)
+    } catch (e) {
+      return rejectWithValue(e.message)
+    }
+  },
+)
+
+export const deactivateProduct = createAsyncThunk(
+  'catalog/deactivateProduct',
+  async (id, { rejectWithValue }) => {
+    try {
+      return await api.deactivateProduct(id)
+    } catch (e) {
+      return rejectWithValue(e.message)
+    }
+  },
+)
+
+export const activateProduct = createAsyncThunk(
+  'catalog/activateProduct',
+  async (id, { rejectWithValue }) => {
+    try {
+      return await api.activateProduct(id)
     } catch (e) {
       return rejectWithValue(e.message)
     }
@@ -338,6 +360,15 @@ const catalogSlice = createSlice({
         }
         replaceIn(state.vendorProducts)
         replaceIn(state.products)
+      })
+      .addCase(deactivateProduct.fulfilled, (state, action) => {
+        const idx = state.vendorProducts.findIndex((p) => p.id === action.payload.id)
+        if (idx >= 0) state.vendorProducts[idx] = action.payload
+        state.products = state.products.filter((p) => p.id !== action.payload.id)
+      })
+      .addCase(activateProduct.fulfilled, (state, action) => {
+        const idx = state.vendorProducts.findIndex((p) => p.id === action.payload.id)
+        if (idx >= 0) state.vendorProducts[idx] = action.payload
       })
       .addCase(fetchCart.pending, (state) => {
         state.cartStatus = 'loading'

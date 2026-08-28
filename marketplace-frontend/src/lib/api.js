@@ -91,8 +91,11 @@ export const api = {
     request(category ? `/products?category=${encodeURIComponent(category)}` : '/products'),
   getProduct: (id) => request(`/products/${id}`),
   getVendorProducts: (vendorId) => request(`/products/vendor/${vendorId}`),
+  getMyProducts: () => request('/products/vendor/mine'),
   createProduct: (body) => request('/products', { method: 'POST', body: JSON.stringify(body) }),
   updateProduct: (id, body) => request(`/products/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  deactivateProduct: (id) => request(`/products/${id}/deactivate`, { method: 'POST' }),
+  activateProduct: (id) => request(`/products/${id}/activate`, { method: 'POST' }),
 
   // Cart
   getCart: () => request('/cart'),

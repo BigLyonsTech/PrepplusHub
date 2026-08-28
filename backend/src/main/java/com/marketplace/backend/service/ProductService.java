@@ -45,6 +45,11 @@ public class ProductService {
         return productRepository.findByVendorIdAndActiveTrue(vendorId);
     }
 
+    /** Includes inactive listings too — for the vendor's own management view, not public browsing. */
+    public List<Product> listMineForVendor(String vendorUserId) {
+        return productRepository.findByVendorId(vendorUserId);
+    }
+
     public Product create(String vendorUserId, ProductRequest request) {
         User vendor = userRepository.findById(vendorUserId)
                 .orElseThrow(() -> new ApiException("User not found", HttpStatus.NOT_FOUND));
@@ -87,5 +92,17 @@ public class ProductService {
         p.setDescription(request.getDescription());
         p.setImage(request.getImage());
         return productRepository.save(p);
+    }
+
+    public Product setActiveByOwner(String vendorUserId, String productId, boolean active) {
+        Product p = productRepository.findById(productId)
+                .orElseThrow(() -> new ApiException("Product not found", HttpStatus.NOT_FOUND));
+        if (!vendorUserId.equals(p.getVendorId())) {
+            throw new ApiException("You can only manage your own products", HttpStatus.FORBIDDEN);
+        }
+        p.setActive(active);
+        Product saved = productRepository.save(p);
+        activityService.log(vendorUserId, active ? "product_activated" : "product_deactivated", java.util.Map.of("productId", productId));
+        return saved;
     }
 }

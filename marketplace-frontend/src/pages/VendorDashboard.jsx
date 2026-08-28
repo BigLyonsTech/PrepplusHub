@@ -11,7 +11,14 @@ import { Field, Input, Select } from '@/components/ui/Input'
 import FormError from '@/components/ui/FormError'
 import ProductThumb from '@/components/ProductThumb'
 import PriceTag from '@/components/PriceTag'
-import { fetchVendorProducts, createProduct } from '@/store/slices/catalogSlice'
+import {
+  fetchVendorProducts,
+  createProduct,
+  updateProduct,
+  deactivateProduct,
+  activateProduct,
+} from '@/store/slices/catalogSlice'
+import { useToast } from '@/components/ToastProvider'
 import { CATEGORY_TINTS } from '@/lib/categoryTints'
 import { cn } from '@/lib/utils'
 
@@ -26,51 +33,80 @@ export default function VendorDashboard() {
   const status = user?.vendorVerificationStatus || 'unsubmitted'
   const verified = status === 'verified'
 
+  const { showToast } = useToast()
+  const emptyForm = { name: '', price: '', originalPrice: '', category: categories[0], description: '', image: '' }
   const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [form, setForm] = useState({
-    name: '',
-    price: '',
-    originalPrice: '',
-    category: categories[0],
-    description: '',
-    image: '',
-  })
+  const [form, setForm] = useState(emptyForm)
 
   useEffect(() => {
-    if (verified && user?.id) dispatch(fetchVendorProducts(user.id))
+    if (verified && user?.id) dispatch(fetchVendorProducts())
   }, [dispatch, verified, user?.id])
 
   function update(key, value) {
     setForm((f) => ({ ...f, [key]: value }))
   }
 
-  async function handleCreate(e) {
+  function openCreateForm() {
+    setEditingId(null)
+    setForm(emptyForm)
+    setShowForm(true)
+  }
+
+  function openEditForm(product) {
+    setEditingId(product.id)
+    setForm({
+      name: product.name,
+      price: String(product.price),
+      originalPrice: product.originalPrice ? String(product.originalPrice) : '',
+      category: product.category,
+      description: product.description || '',
+      image: product.image || '',
+    })
+    setShowForm(true)
+  }
+
+  function closeForm() {
+    setShowForm(false)
+    setEditingId(null)
+    setError('')
+  }
+
+  async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
     setError('')
-    const result = await dispatch(
-      createProduct({
-        name: form.name,
-        price: Number(form.price),
-        originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
-        category: form.category,
-        description: form.description || undefined,
-        image: form.image || undefined,
-      }),
-    )
+    const body = {
+      name: form.name,
+      price: Number(form.price),
+      originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
+      category: form.category,
+      description: form.description || undefined,
+      image: form.image || undefined,
+    }
+    const result = editingId
+      ? await dispatch(updateProduct({ id: editingId, body }))
+      : await dispatch(createProduct(body))
     setSaving(false)
-    if (createProduct.fulfilled.match(result)) {
-      setForm({ name: '', price: '', originalPrice: '', category: categories[0], description: '', image: '' })
-      setShowForm(false)
+    const matcher = editingId ? updateProduct.fulfilled : createProduct.fulfilled
+    if (matcher.match(result)) {
+      closeForm()
     } else {
-      setError(result.payload || 'Could not create product')
+      setError(result.payload || `Could not ${editingId ? 'save' : 'create'} product`)
     }
   }
 
+  function handleToggleActive(product) {
+    const action = product.active ? deactivateProduct : activateProduct
+    dispatch(action(product.id))
+      .unwrap()
+      .catch((message) => showToast(message || 'Could not update that product', 'error'))
+  }
+
   const actions = [
-    { icon: PlusCircle, label: 'Add a product', locked: !verified, onClick: () => setShowForm(true) },
+    { icon: PlusCircle, label: 'Add a product', locked: !verified, onClick: openCreateForm },
     { icon: Wallet, label: 'View payouts', locked: !verified, onClick: () => navigate('/vendor/payouts') },
     { icon: Package, label: 'Manage orders', locked: !verified, onClick: () => navigate('/vendor/orders') },
   ]
@@ -168,18 +204,20 @@ export default function VendorDashboard() {
           <motion.form
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            onSubmit={handleCreate}
+            onSubmit={handleSubmit}
             className="mt-6 bg-surface border border-onLight/10 rounded-2xl p-6 max-w-xl relative"
           >
             <button
               type="button"
-              onClick={() => setShowForm(false)}
+              onClick={closeForm}
               className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-onLight/5"
               aria-label="Close"
             >
               <X size={16} className="text-onLight/40" />
             </button>
-            <h3 className="font-display text-lg font-semibold mb-5">Add a product</h3>
+            <h3 className="font-display text-lg font-semibold mb-5">
+              {editingId ? 'Edit product' : 'Add a product'}
+            </h3>
             <div className="space-y-4">
               <Field label="Product name">
                 <Input value={form.name} onChange={(e) => update('name', e.target.value)} required />
@@ -224,7 +262,7 @@ export default function VendorDashboard() {
             </div>
             <FormError className="mt-4">{error}</FormError>
             <Button type="submit" size="lg" className="w-full mt-6" disabled={saving}>
-              {saving ? 'Adding…' : 'Add product'}
+              {saving ? 'Saving…' : editingId ? 'Save changes' : 'Add product'}
             </Button>
           </motion.form>
         )}
@@ -239,7 +277,7 @@ export default function VendorDashboard() {
             <div>
               <p className="text-sm text-coral mb-2">Couldn't load your products.</p>
               <button
-                onClick={() => dispatch(fetchVendorProducts(user.id))}
+                onClick={() => dispatch(fetchVendorProducts())}
                 className="text-xs font-medium bg-onLight/5 hover:bg-onLight/10 text-onLight/70 rounded-full px-4 py-2 transition-colors"
               >
                 Try again
@@ -250,15 +288,45 @@ export default function VendorDashboard() {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {vendorProducts.map((p) => (
-                <div key={p.id} className="bg-surface border border-onLight/10 rounded-2xl overflow-hidden">
-                  <div className="aspect-[4/3]">
+                <div
+                  key={p.id}
+                  className={cn(
+                    'bg-surface border border-onLight/10 rounded-2xl overflow-hidden',
+                    !p.active && 'opacity-50',
+                  )}
+                >
+                  <div className="aspect-[4/3] relative">
                     <ProductThumb product={p} />
+                    {!p.active && (
+                      <span className="absolute top-2 left-2 text-[10px] font-medium bg-ink/80 text-white rounded-full px-2 py-0.5">
+                        Inactive
+                      </span>
+                    )}
                   </div>
                   <div className="p-4">
                     <div className="font-medium text-sm">{p.name}</div>
                     <div className="text-xs text-onLight/45 mt-0.5">{p.category}</div>
                     <div className="mt-2">
                       <PriceTag product={p} />
+                    </div>
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-onLight/10">
+                      <button
+                        onClick={() => openEditForm(p)}
+                        className="flex-1 text-xs font-medium bg-onLight/5 hover:bg-onLight/10 text-onLight/70 rounded-full px-3 py-1.5"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleToggleActive(p)}
+                        className={cn(
+                          'flex-1 text-xs font-medium rounded-full px-3 py-1.5',
+                          p.active
+                            ? 'bg-coral/10 text-coral hover:bg-coral/15'
+                            : 'bg-emerald/10 text-emerald hover:bg-emerald/15',
+                        )}
+                      >
+                        {p.active ? 'Deactivate' : 'Activate'}
+                      </button>
                     </div>
                   </div>
                 </div>
