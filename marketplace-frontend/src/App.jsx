@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion'
 import PageLoader from './components/PageLoader'
 import ChatWidget from './components/ChatWidget'
 import WhatsAppButton from './components/WhatsAppButton'
+import RequireAuth from './components/RequireAuth'
 
 const NAVBAR_OFFSET = 64 // navbar is h-16, fixed — account for it when scrolling to an anchor
 
@@ -56,6 +57,7 @@ const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'))
 const OrderTrackingPage = lazy(() => import('./pages/OrderTrackingPage'))
 const VendorOrdersPage = lazy(() => import('./pages/VendorOrdersPage'))
 const VendorPayoutsPage = lazy(() => import('./pages/VendorPayoutsPage'))
+const NotFound = lazy(() => import('./pages/NotFound'))
 
 export default function App() {
   const location = useLocation()
@@ -85,12 +87,12 @@ export default function App() {
             <Route path="/onboarding/vendor" element={<VendorEligibilityFlow />} />
 
             {/* 8–10. Dashboards */}
-            <Route path="/customer/dashboard" element={<CustomerDashboard />} />
-            <Route path="/vendor/dashboard" element={<VendorDashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/customer/dashboard" element={<RequireAuth><CustomerDashboard /></RequireAuth>} />
+            <Route path="/vendor/dashboard" element={<RequireAuth><VendorDashboard /></RequireAuth>} />
+            <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
 
             {/* 11. Profile */}
-            <Route path="/profile" element={<ProfileCustomization />} />
+            <Route path="/profile" element={<RequireAuth><ProfileCustomization /></RequireAuth>} />
 
             {/* Public browsing + 12. Product detail */}
             <Route path="/products" element={<ProductsBrowse />} />
@@ -101,11 +103,14 @@ export default function App() {
 
             {/* Order tracking + vendor order management */}
             <Route path="/orders/:id" element={<OrderTrackingPage />} />
-            <Route path="/vendor/orders" element={<VendorOrdersPage />} />
-            <Route path="/vendor/payouts" element={<VendorPayoutsPage />} />
+            <Route path="/vendor/orders" element={<RequireAuth><VendorOrdersPage /></RequireAuth>} />
+            <Route path="/vendor/payouts" element={<RequireAuth><VendorPayoutsPage /></RequireAuth>} />
 
             {/* 14. Terms */}
             <Route path="/terms" element={<TermsAndConditions />} />
+
+            {/* Catch-all */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </AnimatePresence>
       </Suspense>
