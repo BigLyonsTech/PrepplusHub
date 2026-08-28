@@ -16,6 +16,9 @@ public class CheckoutRequest {
 
     private FulfillmentType fulfillmentType = FulfillmentType.DELIVERY;
 
+    @NotBlank
+    private String paymentReference;
+
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
     public String getAddress() { return address; }
@@ -24,4 +27,6 @@ public class CheckoutRequest {
     public void setPhone(String phone) { this.phone = phone; }
     public FulfillmentType getFulfillmentType() { return fulfillmentType; }
     public void setFulfillmentType(FulfillmentType fulfillmentType) { this.fulfillmentType = fulfillmentType; }
+    public String getPaymentReference() { return paymentReference; }
+    public void setPaymentReference(String paymentReference) { this.paymentReference = paymentReference; }
 }

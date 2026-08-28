@@ -54,6 +54,7 @@ public class OrderService {
     private final ActivityService activityService;
     private final GeocodingService geocodingService;
     private final EmailService emailService;
+    private final PaystackService paystackService;
 
     public OrderService(
             OrderRepository orderRepository,
@@ -61,7 +62,8 @@ public class OrderService {
             ProductRepository productRepository,
             ActivityService activityService,
             GeocodingService geocodingService,
-            EmailService emailService
+            EmailService emailService,
+            PaystackService paystackService
     ) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
@@ -69,6 +71,7 @@ public class OrderService {
         this.activityService = activityService;
         this.geocodingService = geocodingService;
         this.emailService = emailService;
+        this.paystackService = paystackService;
     }
 
     public List<Order> listMine(String userId) {
@@ -91,6 +94,7 @@ public class OrderService {
                 request.getFullName(), request.getPhone(), request.getFulfillmentType(), request.getAddress(), lines
         );
         order.setUserId(userId);
+        verifyPayment(order, request.getPaymentReference());
 
         Order saved = orderRepository.save(order);
         user.setCart(new ArrayList<>());
@@ -112,6 +116,7 @@ public class OrderService {
                 request.getFullName(), request.getPhone(), request.getFulfillmentType(), request.getAddress(), lines
         );
         order.setGuestEmail(request.getEmail());
+        verifyPayment(order, request.getPaymentReference());
 
         Order saved = orderRepository.save(order);
 
@@ -122,6 +127,21 @@ public class OrderService {
     }
 
     private record CartLine(String productId, int quantity) {}
+
+    /**
+     * Confirms the Paystack transaction actually succeeded and paid the exact
+     * order total before the order is allowed to be saved. Amounts are compared
+     * in kobo since that's the unit Paystack reports in and rounding a naira
+     * total to the nearest kobo avoids float-precision mismatches.
+     */
+    private void verifyPayment(Order order, String paymentReference) {
+        PaystackService.VerifiedTransaction tx = paystackService.verify(paymentReference);
+        long expectedKobo = Math.round(order.getTotal() * 100);
+        if (!tx.success() || tx.amountKobo() != expectedKobo) {
+            throw new ApiException("Payment could not be verified", HttpStatus.PAYMENT_REQUIRED);
+        }
+        order.setPaymentReference(paymentReference);
+    }
 
     /** Builds and prices an order from resolved cart lines. Caller still needs to set userId or guestEmail. */
     private Order buildOrder(

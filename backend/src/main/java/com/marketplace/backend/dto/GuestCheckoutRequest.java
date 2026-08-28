@@ -30,6 +30,9 @@ public class GuestCheckoutRequest {
     @Valid
     private List<Item> items;
 
+    @NotBlank
+    private String paymentReference;
+
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
     public String getEmail() { return email; }
@@ -42,6 +45,8 @@ public class GuestCheckoutRequest {
     public void setFulfillmentType(FulfillmentType fulfillmentType) { this.fulfillmentType = fulfillmentType; }
     public List<Item> getItems() { return items; }
     public void setItems(List<Item> items) { this.items = items; }
+    public String getPaymentReference() { return paymentReference; }
+    public void setPaymentReference(String paymentReference) { this.paymentReference = paymentReference; }
 
     public static class Item {
         @NotBlank

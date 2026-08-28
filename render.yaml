@@ -34,3 +34,5 @@ services:
         sync: false
       - key: GOOGLE_OAUTH_CLIENT_ID
         sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false

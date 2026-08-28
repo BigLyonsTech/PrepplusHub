@@ -30,6 +30,24 @@ const PACKAGING_FEE = 500
 const DELIVERY_FEE = 2500
 const FREE_DELIVERY_THRESHOLD = 50000
 
+const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY
+const PAYSTACK_SCRIPT_SRC = 'https://js.paystack.co/v1/inline.js'
+
+function loadPaystackScript() {
+  if (window.PaystackPop) return Promise.resolve()
+  const existing = document.querySelector(`script[src="${PAYSTACK_SCRIPT_SRC}"]`)
+  if (existing) {
+    return new Promise((resolve) => existing.addEventListener('load', resolve, { once: true }))
+  }
+  return new Promise((resolve) => {
+    const script = document.createElement('script')
+    script.src = PAYSTACK_SCRIPT_SRC
+    script.async = true
+    script.onload = resolve
+    document.head.appendChild(script)
+  })
+}
+
 export default function CheckoutFlow() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -77,7 +95,7 @@ export default function CheckoutFlow() {
     }
   }
 
-  async function placeOrder() {
+  async function placeOrder(paymentReference) {
     setLoading(true)
     setError('')
     const shared = {
@@ -85,6 +103,7 @@ export default function CheckoutFlow() {
       address: fulfillmentType === 'DELIVERY' ? delivery.address : undefined,
       phone: delivery.phone,
       fulfillmentType,
+      paymentReference,
     }
     const result = isAuthenticated
       ? await dispatch(checkout(shared))
@@ -96,6 +115,34 @@ export default function CheckoutFlow() {
     } else {
       setError(result.payload || 'Checkout failed')
     }
+  }
+
+  async function payWithPaystack() {
+    setError('')
+    if (!PAYSTACK_PUBLIC_KEY) {
+      setError('Payments are not configured yet — please contact us to complete this order.')
+      return
+    }
+    setLoading(true)
+    await loadPaystackScript()
+    if (!window.PaystackPop) {
+      setLoading(false)
+      setError('Could not load the payment popup. Please try again.')
+      return
+    }
+    const handler = window.PaystackPop.setup({
+      key: PAYSTACK_PUBLIC_KEY,
+      email: isAuthenticated ? user?.email : delivery.email,
+      amount: Math.round(total * 100),
+      currency: 'NGN',
+      callback: (response) => {
+        placeOrder(response.reference)
+      },
+      onClose: () => {
+        setLoading(false)
+      },
+    })
+    handler.openIframe()
   }
 
   if (placed) {
@@ -223,18 +270,7 @@ export default function CheckoutFlow() {
               </motion.div>
             )}
             {step === 2 && (
-              <motion.div key="2" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="mt-8 space-y-5">
-                <h2 className="font-display text-2xl font-semibold mb-4">Payment</h2>
-                <p className="text-sm text-onLight/50 mb-2">Demo only — no real charge is made.</p>
-                <Field label="Card number"><Input placeholder="4242 4242 4242 4242" /></Field>
-                <div className="grid grid-cols-2 gap-4">
-                  <Field label="Expiry"><Input placeholder="MM/YY" /></Field>
-                  <Field label="CVC"><Input placeholder="123" /></Field>
-                </div>
-              </motion.div>
-            )}
-            {step === 3 && (
-              <motion.div key="3" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="mt-8">
+              <motion.div key="2" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="mt-8">
                 <h2 className="font-display text-2xl font-semibold mb-4">Review your order</h2>
                 <div className="flex flex-col gap-2">
                   {cart.map((c) => {
@@ -264,6 +300,17 @@ export default function CheckoutFlow() {
                     <span>Total</span><span>₦{total.toLocaleString()}</span>
                   </div>
                 </div>
+              </motion.div>
+            )}
+            {step === 3 && (
+              <motion.div key="3" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="mt-8 space-y-5">
+                <h2 className="font-display text-2xl font-semibold mb-4">Payment</h2>
+                <p className="text-sm text-onLight/50 mb-2">
+                  You&apos;ll be asked to pay ₦{total.toLocaleString()} securely via Paystack.
+                </p>
+                <Button size="lg" className="w-full" disabled={loading} onClick={payWithPaystack}>
+                  {loading ? 'Waiting for payment…' : `Pay ₦${total.toLocaleString()} with Paystack`}
+                </Button>
                 <FormError className="mt-4">{error}</FormError>
               </motion.div>
             )}
@@ -271,21 +318,22 @@ export default function CheckoutFlow() {
 
           <div className="flex justify-between mt-10">
             {step > 1 ? (
-              <Button variant="outline" onClick={() => setStep(step - 1)}>Back</Button>
+              <Button variant="outline" disabled={loading} onClick={() => setStep(step - 1)}>Back</Button>
             ) : <span />}
-            <Button
-              disabled={
-                loading ||
-                (step === 1 &&
+            {step < 3 && (
+              <Button
+                disabled={
+                  step === 1 &&
                   (!delivery.fullName ||
                     !delivery.phone ||
                     (!isAuthenticated && !delivery.email) ||
-                    (fulfillmentType === 'DELIVERY' && !delivery.address)))
-              }
-              onClick={() => (step < 3 ? setStep(step + 1) : placeOrder())}
-            >
-              {loading ? 'Placing…' : step < 3 ? 'Continue' : 'Place order'}
-            </Button>
+                    (fulfillmentType === 'DELIVERY' && !delivery.address))
+                }
+                onClick={() => setStep(step + 1)}
+              >
+                Continue
+              </Button>
+            )}
           </div>
         </div>
 

@@ -18,6 +18,7 @@ public class Order {
     /** Null for a guest order — see guestEmail in that case. */
     private String userId;
     private String guestEmail;
+    private String paymentReference;
     private List<OrderLine> items = new ArrayList<>();
     private double subtotal;
     private double shippingFee;
@@ -89,6 +90,8 @@ public class Order {
     public void setUserId(String userId) { this.userId = userId; }
     public String getGuestEmail() { return guestEmail; }
     public void setGuestEmail(String guestEmail) { this.guestEmail = guestEmail; }
+    public String getPaymentReference() { return paymentReference; }
+    public void setPaymentReference(String paymentReference) { this.paymentReference = paymentReference; }
     public List<OrderLine> getItems() { return items; }
     public void setItems(List<OrderLine> items) { this.items = items; }
     public double getSubtotal() { return subtotal; }
