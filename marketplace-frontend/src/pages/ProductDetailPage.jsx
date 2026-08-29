@@ -2,21 +2,22 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { motion } from 'framer-motion'
-import { Star } from 'lucide-react'
+import { Star, Minus, Plus } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import PageBackdrop from '@/components/PageBackdrop'
 import Reveal from '@/components/Reveal'
 import Button from '@/components/ui/Button'
 import {
-  addToCart,
-  addToCartLocal,
   addVendorReview,
   addProductReview,
+  fetchCart,
   fetchProduct,
   fetchProductReviews,
   fetchVendorReviews,
   fetchWishlist,
+  setCartQuantityLocal,
+  updateCartQuantity,
 } from '@/store/slices/catalogSlice'
 import ProductThumb from '@/components/ProductThumb'
 import PriceTag from '@/components/PriceTag'
@@ -32,12 +33,14 @@ export default function ProductDetailPage() {
     (s) => s.catalog.products.find((p) => p.id === id) || s.catalog.currentProduct,
   )
   const isAuthenticated = useSelector((s) => s.auth.isAuthenticated)
+  const cart = useSelector((s) => s.catalog.cart)
   const vendorReviews = useSelector((s) =>
     s.catalog.vendorReviews.filter((r) => r.vendorId === product?.vendorId),
   )
   const productReviews = useSelector((s) =>
     s.catalog.productReviews.filter((r) => r.productId === id),
   )
+  const [qty, setQty] = useState(1)
   const [tab, setTab] = useState('product')
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
@@ -48,7 +51,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     setLoading(true)
     const tasks = [dispatch(fetchProduct(id)), dispatch(fetchProductReviews(id))]
-    if (isAuthenticated) tasks.push(dispatch(fetchWishlist()))
+    if (isAuthenticated) tasks.push(dispatch(fetchWishlist()), dispatch(fetchCart()))
     Promise.all(tasks).finally(() => setLoading(false))
   }, [dispatch, id, isAuthenticated])
 
@@ -131,16 +134,41 @@ export default function ProductDetailPage() {
               <span className="text-xs text-onLight/40 ml-1">{product.rating}</span>
             </div>
             <p className="text-onLight/65 mb-8 max-w-md">{product.description}</p>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center border border-onLight/15 rounded-full">
+                <button
+                  type="button"
+                  onClick={() => setQty((n) => Math.max(1, n - 1))}
+                  aria-label="Decrease quantity"
+                  className="p-2.5 rounded-full hover:bg-onLight/5"
+                >
+                  <Minus size={14} />
+                </button>
+                <span className="w-8 text-center text-sm font-medium">{qty}</span>
+                <button
+                  type="button"
+                  onClick={() => setQty((n) => n + 1)}
+                  aria-label="Increase quantity"
+                  className="p-2.5 rounded-full hover:bg-onLight/5"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+              <span className="text-sm text-onLight/50">
+                Total: <span className="font-semibold text-onLight">₦{(product.price * qty).toLocaleString()}</span>
+              </span>
+            </div>
             <div className="flex items-center gap-6">
               <PriceTag product={product} size="lg" />
               <Button
                 size="lg"
                 onClick={() => {
+                  const existingQty = cart.find((c) => c.productId === product.id)?.quantity || 0
                   if (!isAuthenticated) {
-                    dispatch(addToCartLocal(product.id))
+                    dispatch(setCartQuantityLocal({ productId: product.id, quantity: existingQty + qty }))
                     return
                   }
-                  dispatch(addToCart(product.id))
+                  dispatch(updateCartQuantity({ productId: product.id, quantity: existingQty + qty }))
                     .unwrap()
                     .catch((message) => showToast(message || 'Could not add that to your cart', 'error'))
                 }}

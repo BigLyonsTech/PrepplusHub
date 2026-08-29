@@ -101,6 +101,8 @@ export const api = {
   getCart: () => request('/cart'),
   addToCart: (productId) =>
     request('/cart/items', { method: 'POST', body: JSON.stringify({ productId }) }),
+  setCartItemQuantity: (productId, quantity) =>
+    request(`/cart/items/${productId}`, { method: 'PUT', body: JSON.stringify({ quantity }) }),
   removeFromCart: (productId) => request(`/cart/items/${productId}`, { method: 'DELETE' }),
   clearCart: () => request('/cart', { method: 'DELETE' }),
 

@@ -104,6 +104,17 @@ export const addToCart = createAsyncThunk('catalog/addToCart', async (productId,
   }
 })
 
+export const updateCartQuantity = createAsyncThunk(
+  'catalog/updateCartQuantity',
+  async ({ productId, quantity }, { rejectWithValue }) => {
+    try {
+      return await api.setCartItemQuantity(productId, quantity)
+    } catch (e) {
+      return rejectWithValue(e.message)
+    }
+  },
+)
+
 export const removeFromCart = createAsyncThunk(
   'catalog/removeFromCart',
   async (productId, { rejectWithValue }) => {
@@ -314,6 +325,17 @@ const catalogSlice = createSlice({
       state.cart = state.cart.filter((c) => c.productId !== action.payload)
       saveGuestCart(state.cart)
     },
+    setCartQuantityLocal(state, action) {
+      const { productId, quantity } = action.payload
+      if (quantity <= 0) {
+        state.cart = state.cart.filter((c) => c.productId !== productId)
+      } else {
+        const existing = state.cart.find((c) => c.productId === productId)
+        if (existing) existing.quantity = quantity
+        else state.cart.push({ productId, quantity })
+      }
+      saveGuestCart(state.cart)
+    },
     clearCartLocal(state) {
       state.cart = []
       saveGuestCart([])
@@ -384,6 +406,9 @@ const catalogSlice = createSlice({
         state.cartError = action.payload || 'Failed to load your cart'
       })
       .addCase(addToCart.fulfilled, (state, action) => {
+        state.cart = action.payload || []
+      })
+      .addCase(updateCartQuantity.fulfilled, (state, action) => {
         state.cart = action.payload || []
       })
       .addCase(removeFromCart.fulfilled, (state, action) => {
@@ -496,5 +521,5 @@ const catalogSlice = createSlice({
   },
 })
 
-export const { addToCartLocal, removeFromCartLocal, clearCartLocal } = catalogSlice.actions
+export const { addToCartLocal, removeFromCartLocal, setCartQuantityLocal, clearCartLocal } = catalogSlice.actions
 export default catalogSlice.reducer

@@ -2,12 +2,13 @@ import { useState, useMemo, memo, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { X } from 'lucide-react'
+import { Minus, Plus, X } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import {
   addToCart,
   removeFromCart,
+  updateCartQuantity,
   fetchProducts,
   fetchCart,
   fetchOrders,
@@ -53,6 +54,18 @@ export default function CustomerDashboard() {
     dispatch(addToCart(productId))
       .unwrap()
       .catch((message) => showToast(message || 'Could not add that to your cart', 'error'))
+  }
+
+  function handleQuantityChange(productId, quantity) {
+    if (quantity <= 0) {
+      dispatch(removeFromCart(productId))
+        .unwrap()
+        .catch((message) => showToast(message || 'Could not remove that item', 'error'))
+      return
+    }
+    dispatch(updateCartQuantity({ productId, quantity }))
+      .unwrap()
+      .catch((message) => showToast(message || 'Could not update that item', 'error'))
   }
 
   const interests = user?.personalizationProfile?.interests || []
@@ -196,7 +209,25 @@ export default function CustomerDashboard() {
                       <div key={c.productId} className="flex justify-between items-center bg-surface border border-onLight/10 rounded-xl p-4">
                         <div>
                           <div className="font-medium text-sm">{p.name}</div>
-                          <div className="text-xs text-onLight/45">Qty {c.quantity}</div>
+                          <div className="flex items-center border border-onLight/15 rounded-full mt-1.5 w-fit">
+                            <button
+                              type="button"
+                              onClick={() => handleQuantityChange(c.productId, c.quantity - 1)}
+                              aria-label={`Decrease quantity of ${p.name}`}
+                              className="p-1.5 rounded-full hover:bg-onLight/5"
+                            >
+                              <Minus size={12} />
+                            </button>
+                            <span className="w-6 text-center text-xs font-medium">{c.quantity}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleQuantityChange(c.productId, c.quantity + 1)}
+                              aria-label={`Increase quantity of ${p.name}`}
+                              className="p-1.5 rounded-full hover:bg-onLight/5"
+                            >
+                              <Plus size={12} />
+                            </button>
+                          </div>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="text-sm font-medium">₦{(p.price * c.quantity).toLocaleString()}</div>

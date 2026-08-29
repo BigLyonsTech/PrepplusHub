@@ -28,6 +28,12 @@ public class CartController {
         return cartService.add(SecurityUtils.requireUserId(), body.get("productId"));
     }
 
+    @PutMapping("/items/{productId}")
+    public List<User.CartItem> setQuantity(@PathVariable String productId, @RequestBody Map<String, Integer> body) {
+        Integer quantity = body.get("quantity");
+        return cartService.setQuantity(SecurityUtils.requireUserId(), productId, quantity == null ? 0 : quantity);
+    }
+
     @DeleteMapping("/items/{productId}")
     public List<User.CartItem> remove(@PathVariable String productId) {
         return cartService.remove(SecurityUtils.requireUserId(), productId);

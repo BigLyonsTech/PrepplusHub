@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, MapPin, Phone, X } from 'lucide-react'
+import { Check, MapPin, Minus, Phone, Plus, X } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import PageBackdrop from '@/components/PageBackdrop'
 import Button from '@/components/ui/Button'
@@ -16,6 +16,8 @@ import {
   fetchProducts,
   removeFromCart,
   removeFromCartLocal,
+  setCartQuantityLocal,
+  updateCartQuantity,
 } from '@/store/slices/catalogSlice'
 import { useToast } from '@/components/ToastProvider'
 import { cn } from '@/lib/utils'
@@ -92,6 +94,20 @@ export default function CheckoutFlow() {
         .catch((message) => showToast(message || 'Could not remove that item', 'error'))
     } else {
       dispatch(removeFromCartLocal(productId))
+    }
+  }
+
+  function handleQuantityChange(productId, quantity) {
+    if (quantity <= 0) {
+      handleRemove(productId)
+      return
+    }
+    if (isAuthenticated) {
+      dispatch(updateCartQuantity({ productId, quantity }))
+        .unwrap()
+        .catch((message) => showToast(message || 'Could not update that item', 'error'))
+    } else {
+      dispatch(setCartQuantityLocal({ productId, quantity }))
     }
   }
 
@@ -278,8 +294,27 @@ export default function CheckoutFlow() {
                     if (!p) return null
                     return (
                       <div key={c.productId} className="flex justify-between items-center text-sm bg-surface border border-onLight/10 rounded-lg p-3">
-                        <span>{p.name} × {c.quantity}</span>
+                        <span>{p.name}</span>
                         <div className="flex items-center gap-3">
+                          <div className="flex items-center border border-onLight/15 rounded-full">
+                            <button
+                              type="button"
+                              onClick={() => handleQuantityChange(c.productId, c.quantity - 1)}
+                              aria-label={`Decrease quantity of ${p.name}`}
+                              className="p-1.5 rounded-full hover:bg-onLight/5"
+                            >
+                              <Minus size={12} />
+                            </button>
+                            <span className="w-6 text-center text-xs font-medium">{c.quantity}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleQuantityChange(c.productId, c.quantity + 1)}
+                              aria-label={`Increase quantity of ${p.name}`}
+                              className="p-1.5 rounded-full hover:bg-onLight/5"
+                            >
+                              <Plus size={12} />
+                            </button>
+                          </div>
                           <span>₦{(p.price * c.quantity).toLocaleString()}</span>
                           <button
                             type="button"

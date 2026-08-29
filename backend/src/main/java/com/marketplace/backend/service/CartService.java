@@ -48,6 +48,31 @@ public class CartService {
         return user.getCart();
     }
 
+    public List<User.CartItem> setQuantity(String userId, String productId, int quantity) {
+        if (quantity <= 0) {
+            return remove(userId, productId);
+        }
+        if (!productRepository.existsById(productId)) {
+            throw new ApiException("Product not found", HttpStatus.NOT_FOUND);
+        }
+        User user = requireUser(userId);
+        if (user.getCart() == null) {
+            user.setCart(new ArrayList<>());
+        }
+        User.CartItem existing = user.getCart().stream()
+                .filter(c -> c.getProductId().equals(productId))
+                .findFirst()
+                .orElse(null);
+        if (existing != null) {
+            existing.setQuantity(quantity);
+        } else {
+            user.getCart().add(new User.CartItem(productId, quantity));
+        }
+        user.setUpdatedAt(Instant.now());
+        userRepository.save(user);
+        return user.getCart();
+    }
+
     public List<User.CartItem> remove(String userId, String productId) {
         User user = requireUser(userId);
         if (user.getCart() != null) {
