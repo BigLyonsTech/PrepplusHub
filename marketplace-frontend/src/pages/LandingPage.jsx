@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { motion } from 'framer-motion'
@@ -32,7 +32,10 @@ const stats = [
 const SELL_WITH_US_VIDEO = ''
 const VENDOR_WALKTHROUGH_VIDEO = ''
 
-const quickCategories = ['Electronics', 'Fashion', 'Home', 'Beauty', 'Sports']
+// Kept to the categories that actually carry live inventory — showing a
+// hover preview for an empty category would look broken, not "professional".
+const quickCategories = ['Fragrances', 'Personal Care', 'Home Appliances', 'Toys', 'Bags']
+const PREVIEW_COUNT = 4
 
 // Timed to land just after HeroIntro's line-draw + headline slide-up
 // finishes (0.5s line + 0.3s stagger + 0.6s slide ≈ 0.9s), each subsequent
@@ -46,6 +49,15 @@ export default function LandingPage() {
   const user = useSelector((s) => s.auth.user)
   const products = useSelector((s) => s.catalog.products)
   const carouselProducts = products.filter((p) => p.image)
+
+  const categoryPreview = useMemo(() => {
+    const map = {}
+    quickCategories.forEach((cat) => {
+      const items = products.filter((p) => p.category === cat)
+      map[cat] = { items: items.slice(0, PREVIEW_COUNT), total: items.length }
+    })
+    return map
+  }, [products])
 
   useEffect(() => {
     dispatch(fetchProducts())
@@ -119,23 +131,52 @@ export default function LandingPage() {
               )}
             </motion.div>
 
-            {/* Quick category shortcuts — colorful circular icons, real links */}
+            {/* Quick category shortcuts — colorful circular icons, real links.
+                Hovering previews a few real items from that category so the
+                icon isn't just a bare label. */}
             <motion.div {...pop(AFTER_INTRO + 0.2)} className="mt-6 flex flex-wrap gap-4">
               {quickCategories.map((cat) => {
                 const tint = CATEGORY_TINTS[cat]
+                const preview = categoryPreview[cat]
                 return (
-                  <Link
-                    key={cat}
-                    to={`/products?category=${encodeURIComponent(cat)}`}
-                    className="flex flex-col items-center gap-1.5 group"
-                  >
-                    <div
-                      className={`size-12 rounded-full flex items-center justify-center border border-onLight/8 group-hover:border-leaf/40 group-hover:-translate-y-0.5 transition-all ${tint.bg}`}
+                  <div key={cat} className="relative group">
+                    <Link
+                      to={`/products?category=${encodeURIComponent(cat)}`}
+                      className="flex flex-col items-center gap-1.5"
                     >
-                      <tint.Icon size={19} className={tint.icon} strokeWidth={1.75} />
-                    </div>
-                    <span className="text-[11px] text-onLight/55 group-hover:text-leaf-dim">{cat}</span>
-                  </Link>
+                      <div
+                        className={`size-12 rounded-full flex items-center justify-center border border-onLight/8 group-hover:border-leaf/40 group-hover:-translate-y-0.5 transition-all ${tint.bg}`}
+                      >
+                        <tint.Icon size={19} className={tint.icon} strokeWidth={1.75} />
+                      </div>
+                      <span className="text-[11px] text-onLight/55 group-hover:text-leaf-dim">{cat}</span>
+                    </Link>
+
+                    {preview && preview.items.length > 0 && (
+                      <div
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 rounded-xl border border-onLight/10 bg-surface shadow-xl p-2
+                                   opacity-0 invisible translate-y-1 pointer-events-none
+                                   group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:pointer-events-auto
+                                   transition-all duration-150 z-20"
+                      >
+                        {preview.items.map((p) => (
+                          <Link
+                            key={p.id}
+                            to={`/products/${p.id}`}
+                            className="block px-2 py-1.5 rounded-lg text-xs text-onLight/70 hover:bg-leaf/8 hover:text-leaf-dim truncate"
+                          >
+                            {p.name}
+                          </Link>
+                        ))}
+                        <Link
+                          to={`/products?category=${encodeURIComponent(cat)}`}
+                          className="block mt-1 px-2 py-1.5 rounded-lg text-xs font-medium text-leaf-dim hover:bg-leaf/8"
+                        >
+                          View all {preview.total} →
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 )
               })}
             </motion.div>
