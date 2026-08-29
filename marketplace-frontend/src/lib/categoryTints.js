@@ -1,4 +1,4 @@
-import { Cpu, Shirt, Home, Sparkles, Dumbbell, BookOpen, SprayCan, Plug, Bath, ToyBrick, Package } from 'lucide-react'
+import { Cpu, Shirt, Home, Sparkles, Dumbbell, BookOpen, SprayCan, Plug, Bath, ToyBrick, Package, ShoppingBasket, Backpack } from 'lucide-react'
 
 export const CATEGORY_TINTS = {
   Electronics: { bg: 'bg-canopy/8', icon: 'text-canopy', Icon: Cpu },
@@ -11,5 +11,7 @@ export const CATEGORY_TINTS = {
   'Home Appliances': { bg: 'bg-slate/10', icon: 'text-slate', Icon: Plug },
   'Personal Care': { bg: 'bg-amber/10', icon: 'text-amber', Icon: Bath },
   Toys: { bg: 'bg-leaf/10', icon: 'text-leaf', Icon: ToyBrick },
+  Groceries: { bg: 'bg-emerald/10', icon: 'text-emerald', Icon: ShoppingBasket },
+  Bags: { bg: 'bg-canopy/10', icon: 'text-canopy', Icon: Backpack },
   default: { bg: 'bg-onLight/5', icon: 'text-onLight/30', Icon: Package },
 }
