@@ -35,6 +35,9 @@ public class Order {
         private String vendorId;
         private int quantity;
         private double unitPrice;
+        // True when this line's quantity was taken out of the product's tracked
+        // stock, so a cancellation knows exactly what to put back.
+        private boolean stockReserved;
 
         public String getProductId() { return productId; }
         public void setProductId(String productId) { this.productId = productId; }
@@ -46,6 +49,8 @@ public class Order {
         public void setQuantity(int quantity) { this.quantity = quantity; }
         public double getUnitPrice() { return unitPrice; }
         public void setUnitPrice(double unitPrice) { this.unitPrice = unitPrice; }
+        public boolean isStockReserved() { return stockReserved; }
+        public void setStockReserved(boolean stockReserved) { this.stockReserved = stockReserved; }
     }
 
     public static class DeliveryAddress {

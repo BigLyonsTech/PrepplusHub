@@ -1,8 +1,11 @@
 package com.marketplace.backend.service;
 
 import com.marketplace.backend.exception.ApiException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -17,6 +20,8 @@ import java.util.Map;
  */
 @Service
 public class PaystackService {
+
+    private static final Logger log = LoggerFactory.getLogger(PaystackService.class);
 
     public record VerifiedTransaction(boolean success, long amountKobo) {}
 
@@ -71,5 +76,25 @@ public class PaystackService {
         boolean success = "success".equals(data.get("status"));
         Number amountKobo = (Number) data.get("amount");
         return new VerifiedTransaction(success, amountKobo != null ? amountKobo.longValue() : 0);
+    }
+
+    /**
+     * Full refund of a verified transaction — used when the buyer paid but the
+     * order can't be created (stock ran out mid-payment). Returns false rather
+     * than throwing so the caller can still report the real reason to the buyer.
+     */
+    public boolean refund(String reference) {
+        try {
+            restClient.post()
+                    .uri("/refund")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("transaction", reference))
+                    .retrieve()
+                    .toBodilessEntity();
+            return true;
+        } catch (Exception e) {
+            log.error("Paystack refund failed for reference {}", reference, e);
+            return false;
+        }
     }
 }

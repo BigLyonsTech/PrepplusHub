@@ -25,6 +25,7 @@ import WishlistButton from '@/components/WishlistButton'
 import FormError from '@/components/ui/FormError'
 import { useToast } from '@/components/ToastProvider'
 import { cn } from '@/lib/utils'
+import { isOutOfStock, maxPurchasable, stockLabel } from '@/lib/stock'
 
 export default function ProductDetailPage() {
   const { id } = useParams()
@@ -105,6 +106,12 @@ export default function ProductDetailPage() {
     )
   }
 
+  const inCartQty = cart.find((c) => c.productId === product.id)?.quantity || 0
+  const soldOut = isOutOfStock(product)
+  // What's still addable once the units already in the cart are counted.
+  const remaining = maxPurchasable(product) - inCartQty
+  const label = stockLabel(product)
+
   return (
     <PageBackdrop>
       <Navbar />
@@ -134,7 +141,10 @@ export default function ProductDetailPage() {
               <span className="text-xs text-onLight/40 ml-1">{product.rating}</span>
             </div>
             <p className="text-onLight/65 mb-8 max-w-md">{product.description}</p>
-            <div className="flex items-center gap-4 mb-6">
+            {label && (
+              <p className={cn('text-sm font-medium mb-4', soldOut ? 'text-coral' : 'text-amber')}>{label}</p>
+            )}
+            <div className={cn('flex items-center gap-4 mb-6', soldOut && 'hidden')}>
               <div className="flex items-center border border-onLight/15 rounded-full">
                 <button
                   type="button"
@@ -147,9 +157,10 @@ export default function ProductDetailPage() {
                 <span className="w-8 text-center text-sm font-medium">{qty}</span>
                 <button
                   type="button"
-                  onClick={() => setQty((n) => n + 1)}
+                  onClick={() => setQty((n) => Math.min(n + 1, Math.max(1, remaining)))}
+                  disabled={qty >= remaining}
                   aria-label="Increase quantity"
-                  className="p-2.5 rounded-full hover:bg-onLight/5"
+                  className="p-2.5 rounded-full hover:bg-onLight/5 disabled:opacity-30"
                 >
                   <Plus size={14} />
                 </button>
@@ -162,18 +173,22 @@ export default function ProductDetailPage() {
               <PriceTag product={product} size="lg" />
               <Button
                 size="lg"
+                disabled={soldOut || remaining <= 0}
                 onClick={() => {
-                  const existingQty = cart.find((c) => c.productId === product.id)?.quantity || 0
-                  if (!isAuthenticated) {
-                    dispatch(setCartQuantityLocal({ productId: product.id, quantity: existingQty + qty }))
+                  if (qty > remaining) {
+                    showToast(`Only ${maxPurchasable(product)} available — you already have ${inCartQty} in your cart`, 'error')
                     return
                   }
-                  dispatch(updateCartQuantity({ productId: product.id, quantity: existingQty + qty }))
+                  if (!isAuthenticated) {
+                    dispatch(setCartQuantityLocal({ productId: product.id, quantity: inCartQty + qty }))
+                    return
+                  }
+                  dispatch(updateCartQuantity({ productId: product.id, quantity: inCartQty + qty }))
                     .unwrap()
                     .catch((message) => showToast(message || 'Could not add that to your cart', 'error'))
                 }}
               >
-                Add to cart
+                {soldOut ? 'Out of stock' : remaining <= 0 ? 'All in your cart' : 'Add to cart'}
               </Button>
               <WishlistButton productId={product.id} size={20} className="border border-onLight/15" />
             </div>

@@ -73,6 +73,7 @@ export const recordPayout = createAsyncThunk(
 const initialState = {
   vendorQueue: [],
   approvedVendors: [],
+  lowStock: [],
   customerQueue: [],
   activityLog: [],
   dashboardCuration: {
@@ -100,6 +101,7 @@ const adminSlice = createSlice({
         state.status = 'succeeded'
         state.vendorQueue = action.payload.vendorQueue || []
         state.approvedVendors = action.payload.approvedVendors || []
+        state.lowStock = action.payload.lowStock || []
         state.customerQueue = action.payload.customerQueue || []
         state.activityLog = action.payload.activityLog || []
         state.dashboardCuration = action.payload.dashboardCuration || {

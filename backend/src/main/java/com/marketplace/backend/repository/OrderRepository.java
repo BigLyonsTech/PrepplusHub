@@ -8,4 +8,5 @@ import java.util.List;
 public interface OrderRepository extends MongoRepository<Order, String> {
     List<Order> findByUserIdOrderByPlacedAtDesc(String userId);
     List<Order> findByItems_VendorIdOrderByPlacedAtDesc(String vendorId);
+    boolean existsByPaymentReference(String paymentReference);
 }

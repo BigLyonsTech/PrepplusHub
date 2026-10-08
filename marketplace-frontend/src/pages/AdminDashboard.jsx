@@ -17,7 +17,7 @@ import { useToast } from '@/components/ToastProvider'
 import FormError from '@/components/ui/FormError'
 import { cn } from '@/lib/utils'
 
-const sections = ['Vendor Queue', 'Approved Vendors', 'Customer Queue', 'Payouts', 'Activity Log', 'Dashboard Curation']
+const sections = ['Vendor Queue', 'Approved Vendors', 'Low Stock', 'Customer Queue', 'Payouts', 'Activity Log', 'Dashboard Curation']
 
 export default function AdminDashboard() {
   const dispatch = useDispatch()
@@ -26,6 +26,7 @@ export default function AdminDashboard() {
   const {
     vendorQueue,
     approvedVendors,
+    lowStock,
     customerQueue,
     activityLog,
     dashboardCuration,
@@ -110,6 +111,11 @@ export default function AdminDashboard() {
               )}
             >
               {s}
+              {s === 'Low Stock' && lowStock.length > 0 && (
+                <span className="ml-2 text-[11px] font-semibold bg-coral text-white rounded-full px-1.5 py-0.5">
+                  {lowStock.length}
+                </span>
+              )}
             </button>
           ))}
         </aside>
@@ -197,6 +203,40 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {section === 'Low Stock' && (
+            <div className="flex flex-col gap-3">
+              <p className="text-xs text-onLight/45">
+                Active products with 5 or fewer units left. Vendors restock by editing the listing on their dashboard.
+              </p>
+              {lowStock.length === 0 && (
+                <p className="text-sm text-onLight/45">Nothing is running low.</p>
+              )}
+              {[...lowStock]
+                .sort((a, b) => a.stock - b.stock)
+                .map((p) => (
+                  <div
+                    key={p.id}
+                    className="bg-surface border border-onLight/10 rounded-2xl px-5 py-4 flex items-center justify-between gap-4"
+                  >
+                    <div className="min-w-0">
+                      <h3 className="font-medium text-sm truncate">{p.name}</h3>
+                      <p className="text-xs text-onLight/45 mt-0.5">
+                        {p.vendor} · {p.category}
+                      </p>
+                    </div>
+                    <span
+                      className={cn(
+                        'shrink-0 text-xs font-medium rounded-full px-3 py-1.5',
+                        p.stock <= 0 ? 'bg-coral/10 text-coral' : 'bg-amber/15 text-amber',
+                      )}
+                    >
+                      {p.stock <= 0 ? 'Out of stock' : `${p.stock} left`}
+                    </span>
+                  </div>
+                ))}
             </div>
           )}
 

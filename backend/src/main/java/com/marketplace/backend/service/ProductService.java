@@ -67,6 +67,7 @@ public class ProductService {
         p.setCategory(request.getCategory());
         p.setDescription(request.getDescription());
         p.setImage(request.getImage());
+        p.setStock(request.getStock());
         p.setVendorId(vendor.getId());
         String shopName = vendor.getVendorEligibility() != null
                 ? vendor.getVendorEligibility().getBusinessName()
@@ -91,6 +92,7 @@ public class ProductService {
         p.setCategory(request.getCategory());
         p.setDescription(request.getDescription());
         p.setImage(request.getImage());
+        p.setStock(request.getStock());
         return productRepository.save(p);
     }
 

@@ -21,6 +21,7 @@ import {
 import { useToast } from '@/components/ToastProvider'
 import { CATEGORY_TINTS } from '@/lib/categoryTints'
 import { cn } from '@/lib/utils'
+import { isStockTracked, LOW_STOCK_THRESHOLD } from '@/lib/stock'
 
 const categories = Object.keys(CATEGORY_TINTS).filter((c) => c !== 'default')
 
@@ -30,11 +31,14 @@ export default function VendorDashboard() {
   const user = useSelector((s) => s.auth.user)
   const vendorProducts = useSelector((s) => s.catalog.vendorProducts)
   const vendorProductsStatus = useSelector((s) => s.catalog.vendorProductsStatus)
+  const lowStockCount = vendorProducts.filter(
+    (p) => p.active && isStockTracked(p) && p.stock <= LOW_STOCK_THRESHOLD,
+  ).length
   const status = user?.vendorVerificationStatus || 'unsubmitted'
   const verified = status === 'verified'
 
   const { showToast } = useToast()
-  const emptyForm = { name: '', price: '', originalPrice: '', category: categories[0], description: '', image: '' }
+  const emptyForm = { name: '', price: '', originalPrice: '', category: categories[0], description: '', image: '', stock: '' }
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -64,6 +68,7 @@ export default function VendorDashboard() {
       category: product.category,
       description: product.description || '',
       image: product.image || '',
+      stock: product.stock != null ? String(product.stock) : '',
     })
     setShowForm(true)
   }
@@ -85,6 +90,8 @@ export default function VendorDashboard() {
       category: form.category,
       description: form.description || undefined,
       image: form.image || undefined,
+      // Blank = don't track stock (sent as null so an edit can switch tracking off).
+      stock: form.stock === '' ? null : Number(form.stock),
     }
     const result = editingId
       ? await dispatch(updateProduct({ id: editingId, body }))
@@ -241,6 +248,16 @@ export default function VendorDashboard() {
                   />
                 </Field>
               </div>
+              <Field label="Units in stock" hint="Leave blank if you don't want stock tracked">
+                <Input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.stock}
+                  onChange={(e) => update('stock', e.target.value)}
+                  placeholder="Not tracked"
+                />
+              </Field>
               <Field label="Category">
                 <Select value={form.category} onChange={(e) => update('category', e.target.value)}>
                   {categories.map((c) => (
@@ -269,6 +286,12 @@ export default function VendorDashboard() {
 
         <div className="mt-10">
           <h2 className="font-display text-xl font-semibold mb-4">Your products</h2>
+          {lowStockCount > 0 && (
+            <p className="mb-4 text-sm rounded-xl border border-amber/30 bg-amber/10 text-onLight/80 px-4 py-3">
+              {lowStockCount} active {lowStockCount === 1 ? 'product is' : 'products are'} low on or out of stock —
+              edit them to restock.
+            </p>
+          )}
           {!verified ? (
             <p className="text-sm text-onLight/45">Your products will show up here once you're verified.</p>
           ) : vendorProductsStatus === 'loading' ? (
@@ -306,8 +329,9 @@ export default function VendorDashboard() {
                   <div className="p-4">
                     <div className="font-medium text-sm">{p.name}</div>
                     <div className="text-xs text-onLight/45 mt-0.5">{p.category}</div>
-                    <div className="mt-2">
+                    <div className="mt-2 flex items-center justify-between gap-2">
                       <PriceTag product={p} />
+                      <StockBadge product={p} />
                     </div>
                     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-onLight/10">
                       <button
@@ -336,5 +360,18 @@ export default function VendorDashboard() {
         </div>
       </div>
     </PageBackdrop>
+  )
+}
+
+function StockBadge({ product }) {
+  if (!isStockTracked(product)) {
+    return <span className="text-[11px] text-onLight/40">Stock not tracked</span>
+  }
+  const tone =
+    product.stock <= 0 ? 'bg-coral/10 text-coral' : product.stock <= LOW_STOCK_THRESHOLD ? 'bg-amber/15 text-amber' : 'bg-emerald/10 text-emerald'
+  return (
+    <span className={cn('text-[11px] font-medium rounded-full px-2 py-0.5 whitespace-nowrap', tone)}>
+      {product.stock <= 0 ? 'Out of stock' : `${product.stock} in stock`}
+    </span>
   )
 }

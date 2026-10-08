@@ -1,6 +1,7 @@
 package com.marketplace.backend.service;
 
 import com.marketplace.backend.exception.ApiException;
+import com.marketplace.backend.model.Product;
 import com.marketplace.backend.model.User;
 import com.marketplace.backend.repository.ProductRepository;
 import com.marketplace.backend.repository.UserRepository;
@@ -16,10 +17,12 @@ public class CartService {
 
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final InventoryService inventoryService;
 
-    public CartService(UserRepository userRepository, ProductRepository productRepository) {
+    public CartService(UserRepository userRepository, ProductRepository productRepository, InventoryService inventoryService) {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
+        this.inventoryService = inventoryService;
     }
 
     public List<User.CartItem> getCart(String userId) {
@@ -27,9 +30,7 @@ public class CartService {
     }
 
     public List<User.CartItem> add(String userId, String productId) {
-        if (!productRepository.existsById(productId)) {
-            throw new ApiException("Product not found", HttpStatus.NOT_FOUND);
-        }
+        Product product = requireProduct(productId);
         User user = requireUser(userId);
         if (user.getCart() == null) {
             user.setCart(new ArrayList<>());
@@ -39,8 +40,10 @@ public class CartService {
                 .findFirst()
                 .orElse(null);
         if (existing != null) {
+            inventoryService.assertAvailable(product, existing.getQuantity() + 1);
             existing.setQuantity(existing.getQuantity() + 1);
         } else {
+            inventoryService.assertAvailable(product, 1);
             user.getCart().add(new User.CartItem(productId, 1));
         }
         user.setUpdatedAt(Instant.now());
@@ -52,9 +55,7 @@ public class CartService {
         if (quantity <= 0) {
             return remove(userId, productId);
         }
-        if (!productRepository.existsById(productId)) {
-            throw new ApiException("Product not found", HttpStatus.NOT_FOUND);
-        }
+        inventoryService.assertAvailable(requireProduct(productId), quantity);
         User user = requireUser(userId);
         if (user.getCart() == null) {
             user.setCart(new ArrayList<>());
@@ -89,6 +90,11 @@ public class CartService {
         user.setUpdatedAt(Instant.now());
         userRepository.save(user);
         return user.getCart();
+    }
+
+    private Product requireProduct(String productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new ApiException("Product not found", HttpStatus.NOT_FOUND));
     }
 
     private User requireUser(String userId) {

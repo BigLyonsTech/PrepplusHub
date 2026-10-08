@@ -27,19 +27,22 @@ public class AdminService {
     private final PlatformSettingsRepository platformSettingsRepository;
     private final ProductRepository productRepository;
     private final ActivityService activityService;
+    private final InventoryService inventoryService;
 
     public AdminService(
             UserRepository userRepository,
             ActivityLogRepository activityLogRepository,
             PlatformSettingsRepository platformSettingsRepository,
             ProductRepository productRepository,
-            ActivityService activityService
+            ActivityService activityService,
+            InventoryService inventoryService
     ) {
         this.userRepository = userRepository;
         this.activityLogRepository = activityLogRepository;
         this.platformSettingsRepository = platformSettingsRepository;
         this.productRepository = productRepository;
         this.activityService = activityService;
+        this.inventoryService = inventoryService;
     }
 
     public Map<String, Object> dashboard() {
@@ -64,6 +67,8 @@ public class AdminService {
         result.put("approvedVendors", approvedVendors);
         result.put("customerQueue", customerQueue);
         result.put("activityLog", activityLog);
+        result.put("lowStock", inventoryService.lowStock());
+        result.put("lowStockThreshold", InventoryService.LOW_STOCK_THRESHOLD);
         result.put("dashboardCuration", Map.of(
                 "featuredCategories", settings.getFeaturedCategories(),
                 "banners", settings.getBanners()

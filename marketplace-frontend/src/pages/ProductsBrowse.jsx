@@ -12,6 +12,7 @@ import ProductThumb from '@/components/ProductThumb'
 import PriceTag from '@/components/PriceTag'
 import WishlistButton from '@/components/WishlistButton'
 import { CATEGORY_TINTS } from '@/lib/categoryTints'
+import { isOutOfStock, maxPurchasable, stockLabel } from '@/lib/stock'
 
 const SWIPE_OFFSET_THRESHOLD = 80
 const SWIPE_VELOCITY_THRESHOLD = 500
@@ -19,6 +20,7 @@ const SWIPE_VELOCITY_THRESHOLD = 500
 export default function ProductsBrowse() {
   const products = useSelector((s) => s.catalog.products)
   const isAuthenticated = useSelector((s) => s.auth.isAuthenticated)
+  const cart = useSelector((s) => s.catalog.cart)
   const catalogStatus = useSelector((s) => s.catalog.status)
   const catalogError = useSelector((s) => s.catalog.error)
   const dispatch = useDispatch()
@@ -161,8 +163,13 @@ export default function ProductsBrowse() {
                 transition={{ delay: Math.min(i * 0.05, 0.4) }}
                 className="bg-surface border border-onLight/10 rounded-2xl overflow-hidden"
               >
-                <Link to={`/products/${p.id}`} className="block aspect-[4/3]">
+                <Link to={`/products/${p.id}`} className="relative block aspect-[4/3]">
                   <ProductThumb product={p} />
+                  {stockLabel(p) && (
+                    <span className="absolute top-3 left-3 text-[11px] font-semibold rounded-full px-2.5 py-1 bg-ink/80 text-white">
+                      {stockLabel(p)}
+                    </span>
+                  )}
                 </Link>
                 <div className="p-4">
                   <Link to={`/products/${p.id}`} className="font-medium text-sm hover:text-leaf">
@@ -174,7 +181,13 @@ export default function ProductsBrowse() {
                     <div className="flex items-center gap-1">
                       <WishlistButton productId={p.id} />
                       <button
+                        disabled={isOutOfStock(p)}
                         onClick={() => {
+                          const inCart = cart.find((c) => c.productId === p.id)?.quantity || 0
+                          if (inCart + 1 > maxPurchasable(p)) {
+                            showToast(`Only ${maxPurchasable(p)} of ${p.name} available`, 'error')
+                            return
+                          }
                           if (!isAuthenticated) {
                             dispatch(addToCartLocal(p.id))
                             return
@@ -183,9 +196,9 @@ export default function ProductsBrowse() {
                             .unwrap()
                             .catch((message) => showToast(message || 'Could not add that to your cart', 'error'))
                         }}
-                        className="shrink-0 text-xs font-medium bg-ink text-white rounded-full px-3 py-1.5 hover:bg-black"
+                        className="shrink-0 text-xs font-medium bg-ink text-white rounded-full px-3 py-1.5 hover:bg-black disabled:opacity-40 disabled:pointer-events-none"
                       >
-                        Add
+                        {isOutOfStock(p) ? 'Sold out' : 'Add'}
                       </button>
                     </div>
                   </div>

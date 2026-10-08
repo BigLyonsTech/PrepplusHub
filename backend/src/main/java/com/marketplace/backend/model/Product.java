@@ -27,6 +27,10 @@ public class Product {
     private int reviewCount = 0;
     private String description;
     private String image;
+    // Units on hand. null means stock isn't tracked for this listing (every
+    // product created before inventory existed) — it stays purchasable in any
+    // quantity. A number is decremented atomically at checkout by InventoryService.
+    private Integer stock;
     private boolean active = true;
     private Instant createdAt = Instant.now();
 
@@ -54,6 +58,8 @@ public class Product {
     public void setDescription(String description) { this.description = description; }
     public String getImage() { return image; }
     public void setImage(String image) { this.image = image; }
+    public Integer getStock() { return stock; }
+    public void setStock(Integer stock) { this.stock = stock; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
     public Instant getCreatedAt() { return createdAt; }

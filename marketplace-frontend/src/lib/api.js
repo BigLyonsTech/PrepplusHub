@@ -112,6 +112,8 @@ export const api = {
   getVendorOrders: () => request('/orders/vendor/mine'),
   checkout: (body) => request('/orders/checkout', { method: 'POST', body: JSON.stringify(body) }),
   guestCheckout: (body) => request('/orders/guest-checkout', { method: 'POST', body: JSON.stringify(body) }),
+  checkAvailability: (items) =>
+    request('/orders/check-availability', { method: 'POST', body: JSON.stringify({ items }) }),
   updateOrderStatus: (id, status) =>
     request(`/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
 

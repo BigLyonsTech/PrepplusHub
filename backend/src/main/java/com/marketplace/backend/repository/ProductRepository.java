@@ -10,4 +10,6 @@ public interface ProductRepository extends MongoRepository<Product, String> {
     List<Product> findByCategoryIgnoreCaseAndActiveTrue(String category);
     List<Product> findByVendorIdAndActiveTrue(String vendorId);
     List<Product> findByVendorId(String vendorId);
+    // $lte never matches a null/missing field, so untracked listings are excluded.
+    List<Product> findByActiveTrueAndStockLessThanEqual(int threshold);
 }

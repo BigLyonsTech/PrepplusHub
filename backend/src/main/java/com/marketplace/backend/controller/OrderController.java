@@ -1,5 +1,6 @@
 package com.marketplace.backend.controller;
 
+import com.marketplace.backend.dto.AvailabilityRequest;
 import com.marketplace.backend.dto.CheckoutRequest;
 import com.marketplace.backend.dto.GuestCheckoutRequest;
 import com.marketplace.backend.dto.UpdateOrderStatusRequest;
@@ -10,6 +11,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -39,6 +41,12 @@ public class OrderController {
     @PostMapping("/checkout")
     public Order checkout(@Valid @RequestBody CheckoutRequest request) {
         return orderService.checkout(SecurityUtils.requireUserId(), request);
+    }
+
+    @PostMapping("/check-availability")
+    public Map<String, Boolean> checkAvailability(@Valid @RequestBody AvailabilityRequest request) {
+        orderService.checkAvailability(request.getItems());
+        return Map.of("available", true);
     }
 
     @PostMapping("/guest-checkout")

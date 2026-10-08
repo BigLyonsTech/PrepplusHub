@@ -21,6 +21,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -55,6 +56,7 @@ public class OrderService {
     private final GeocodingService geocodingService;
     private final EmailService emailService;
     private final PaystackService paystackService;
+    private final InventoryService inventoryService;
 
     public OrderService(
             OrderRepository orderRepository,
@@ -63,7 +65,8 @@ public class OrderService {
             ActivityService activityService,
             GeocodingService geocodingService,
             EmailService emailService,
-            PaystackService paystackService
+            PaystackService paystackService,
+            InventoryService inventoryService
     ) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
@@ -72,6 +75,7 @@ public class OrderService {
         this.geocodingService = geocodingService;
         this.emailService = emailService;
         this.paystackService = paystackService;
+        this.inventoryService = inventoryService;
     }
 
     public List<Order> listMine(String userId) {
@@ -94,9 +98,7 @@ public class OrderService {
                 request.getFullName(), request.getPhone(), request.getFulfillmentType(), request.getAddress(), lines
         );
         order.setUserId(userId);
-        verifyPayment(order, request.getPaymentReference());
-
-        Order saved = orderRepository.save(order);
+        Order saved = payAndSave(order, request.getPaymentReference());
         user.setCart(new ArrayList<>());
         user.setUpdatedAt(Instant.now());
         userRepository.save(user);
@@ -116,9 +118,7 @@ public class OrderService {
                 request.getFullName(), request.getPhone(), request.getFulfillmentType(), request.getAddress(), lines
         );
         order.setGuestEmail(request.getEmail());
-        verifyPayment(order, request.getPaymentReference());
-
-        Order saved = orderRepository.save(order);
+        Order saved = payAndSave(order, request.getPaymentReference());
 
         activityService.log("guest:" + request.getEmail(), "order_placed", Map.of("orderId", saved.getId(), "total", saved.getTotal()));
         emailService.notifyAdminNewOrder(saved.getId(), saved.getTotal(), request.getFullName() + " (guest, " + request.getEmail() + ")");
@@ -126,7 +126,53 @@ public class OrderService {
         return saved;
     }
 
+    /**
+     * Pre-payment check so the buyer is told about a sold-out item before the
+     * Paystack popup opens, not after their card has been charged.
+     */
+    public void checkAvailability(List<GuestCheckoutRequest.Item> items) {
+        if (items == null || items.isEmpty()) {
+            throw new ApiException("Cart is empty", HttpStatus.BAD_REQUEST);
+        }
+        Map<String, Product> productsById = loadProducts(items.stream().map(GuestCheckoutRequest.Item::getProductId).toList());
+        for (GuestCheckoutRequest.Item item : items) {
+            Product product = productsById.get(item.getProductId());
+            if (product == null) {
+                throw new ApiException("Product not found: " + item.getProductId(), HttpStatus.BAD_REQUEST);
+            }
+            inventoryService.assertAvailable(product, item.getQuantity());
+        }
+    }
+
     private record CartLine(String productId, int quantity) {}
+
+    /**
+     * Verifies payment, takes the stock, then saves. Stock is reserved only
+     * after payment is confirmed, so an abandoned popup never locks units up.
+     * The cost is a narrow race where the last unit sells while this buyer is
+     * paying — in that case the payment is refunded rather than overselling.
+     */
+    private Order payAndSave(Order order, String paymentReference) {
+        verifyPayment(order, paymentReference);
+
+        Optional<String> soldOut = inventoryService.reserve(order.getItems());
+        if (soldOut.isPresent()) {
+            boolean refunded = paystackService.refund(paymentReference);
+            throw new ApiException(
+                    soldOut.get() + " sold out while you were paying. "
+                            + (refunded
+                            ? "Your payment has been refunded."
+                            : "Please contact support with reference " + paymentReference + " for a refund."),
+                    HttpStatus.CONFLICT
+            );
+        }
+        try {
+            return orderRepository.save(order);
+        } catch (RuntimeException e) {
+            inventoryService.release(order.getItems());
+            throw e;
+        }
+    }
 
     /**
      * Confirms the Paystack transaction actually succeeded and paid the exact
@@ -135,6 +181,11 @@ public class OrderService {
      * total to the nearest kobo avoids float-precision mismatches.
      */
     private void verifyPayment(Order order, String paymentReference) {
+        // A verified reference is otherwise reusable: replaying it against a
+        // same-priced cart would place a second order on one payment.
+        if (paymentReference != null && orderRepository.existsByPaymentReference(paymentReference)) {
+            throw new ApiException("This payment has already been used for an order", HttpStatus.CONFLICT);
+        }
         PaystackService.VerifiedTransaction tx = paystackService.verify(paymentReference);
         long expectedKobo = Math.round(order.getTotal() * 100);
         if (!tx.success() || tx.amountKobo() != expectedKobo) {
@@ -180,10 +231,7 @@ public class OrderService {
         });
         order.setDeliveryAddress(addr);
 
-        List<String> productIds = cartLines.stream().map(CartLine::productId).toList();
-        Map<String, Product> productsById = StreamSupport
-                .stream(productRepository.findAllById(productIds).spliterator(), false)
-                .collect(Collectors.toMap(Product::getId, p -> p, (a, b) -> a, HashMap::new));
+        Map<String, Product> productsById = loadProducts(cartLines.stream().map(CartLine::productId).toList());
 
         List<Order.OrderLine> lines = new ArrayList<>();
         double subtotal = 0;
@@ -192,6 +240,7 @@ public class OrderService {
             if (product == null) {
                 throw new ApiException("Product not found: " + item.productId(), HttpStatus.BAD_REQUEST);
             }
+            inventoryService.assertAvailable(product, item.quantity());
             Order.OrderLine line = new Order.OrderLine();
             line.setProductId(product.getId());
             line.setProductName(product.getName());
@@ -211,6 +260,12 @@ public class OrderService {
         order.setShippingFee(shippingFee);
         order.setTotal(subtotal + shippingFee);
         return order;
+    }
+
+    private Map<String, Product> loadProducts(List<String> productIds) {
+        return StreamSupport
+                .stream(productRepository.findAllById(productIds).spliterator(), false)
+                .collect(Collectors.toMap(Product::getId, p -> p, (a, b) -> a, HashMap::new));
     }
 
     public Order getOrderForCustomer(String userId, String orderId) {
@@ -246,6 +301,9 @@ public class OrderService {
 
         order.getStatusHistory().add(new Order.StatusEvent(newStatus, Instant.now()));
         order.setStatus(newStatus);
+        if (newStatus == OrderStatus.CANCELLED) {
+            inventoryService.release(order.getItems());
+        }
         Order saved = orderRepository.save(order);
 
         activityService.log(vendorUserId, "order_status_updated", Map.of("orderId", orderId, "status", newStatus.name()));

@@ -21,6 +21,8 @@ import {
 } from '@/store/slices/catalogSlice'
 import { useToast } from '@/components/ToastProvider'
 import { cn } from '@/lib/utils'
+import { maxPurchasable } from '@/lib/stock'
+import { api } from '@/lib/api'
 
 const STORE_ADDRESS = '23 Bisiriyu Lawal St, Shasha, Lagos 100275, Lagos Nigeria'
 const STORE_PHONES = ['091-355-55567', '091-373-59114']
@@ -102,6 +104,11 @@ export default function CheckoutFlow() {
       handleRemove(productId)
       return
     }
+    const product = products.find((p) => p.id === productId)
+    if (product && quantity > maxPurchasable(product)) {
+      showToast(`Only ${maxPurchasable(product)} of ${product.name} available`, 'error')
+      return
+    }
     if (isAuthenticated) {
       dispatch(updateCartQuantity({ productId, quantity }))
         .unwrap()
@@ -140,6 +147,15 @@ export default function CheckoutFlow() {
       return
     }
     setLoading(true)
+    // Catch sold-out items before the card is charged, not after.
+    try {
+      await api.checkAvailability(cart.map((c) => ({ productId: c.productId, quantity: c.quantity })))
+    } catch (err) {
+      setLoading(false)
+      setError(err.message || 'Some items in your cart are no longer available.')
+      dispatch(fetchProducts())
+      return
+    }
     await loadPaystackScript()
     if (!window.PaystackPop) {
       setLoading(false)
