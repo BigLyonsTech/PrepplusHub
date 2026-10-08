@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { MapPin } from 'lucide-react'
 import Navbar from '@/components/Navbar'
@@ -12,14 +12,16 @@ import { fetchOrder } from '@/store/slices/catalogSlice'
 
 export default function OrderTrackingPage() {
   const { id } = useParams()
+  const [searchParams] = useSearchParams()
+  const token = searchParams.get('t')
   const dispatch = useDispatch()
   const order = useSelector((s) => s.catalog.currentOrder?.id === id ? s.catalog.currentOrder : null)
   const orderStatus = useSelector((s) => s.catalog.orderStatus)
   const orderError = useSelector((s) => s.catalog.orderError)
 
   useEffect(() => {
-    dispatch(fetchOrder(id))
-  }, [dispatch, id])
+    dispatch(fetchOrder({ id, token }))
+  }, [dispatch, id, token])
 
   if (orderStatus === 'loading' && !order) {
     return (

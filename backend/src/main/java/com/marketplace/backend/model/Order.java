@@ -19,6 +19,9 @@ public class Order {
     private String userId;
     private String guestEmail;
     private String paymentReference;
+    // Unguessable secret that lets a guest (no account) view their order from
+    // the emailed link. Never shown in vendor/admin listings' UI.
+    private String trackingToken;
     private List<OrderLine> items = new ArrayList<>();
     private double subtotal;
     private double shippingFee;
@@ -95,6 +98,8 @@ public class Order {
     public void setUserId(String userId) { this.userId = userId; }
     public String getGuestEmail() { return guestEmail; }
     public void setGuestEmail(String guestEmail) { this.guestEmail = guestEmail; }
+    public String getTrackingToken() { return trackingToken; }
+    public void setTrackingToken(String trackingToken) { this.trackingToken = trackingToken; }
     public String getPaymentReference() { return paymentReference; }
     public void setPaymentReference(String paymentReference) { this.paymentReference = paymentReference; }
     public List<OrderLine> getItems() { return items; }

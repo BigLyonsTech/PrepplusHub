@@ -33,6 +33,12 @@ public class OrderController {
         return orderService.getOrderForCustomer(SecurityUtils.requireUserId(), id);
     }
 
+    /** Public, token-gated lookup for the tracking link in confirmation emails (works for guests). */
+    @GetMapping("/{id}/track")
+    public Order track(@PathVariable String id, @RequestParam("t") String token) {
+        return orderService.getOrderByTrackingToken(id, token);
+    }
+
     @GetMapping("/vendor/mine")
     public List<Order> vendorOrders() {
         return orderService.listForVendor(SecurityUtils.requireUserId());

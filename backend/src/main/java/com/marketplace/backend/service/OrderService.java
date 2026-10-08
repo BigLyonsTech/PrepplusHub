@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import java.security.MessageDigest;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -104,8 +106,7 @@ public class OrderService {
         userRepository.save(user);
 
         activityService.log(userId, "order_placed", Map.of("orderId", saved.getId(), "total", saved.getTotal()));
-        emailService.notifyAdminNewOrder(saved.getId(), saved.getTotal(), user.getName() + " (" + user.getEmail() + ")");
-        emailService.sendOrderConfirmation(user.getEmail(), saved.getId(), saved.getTotal());
+        sendOrderPlacedEmails(saved, user.getEmail(), user.getName(), user.getName() + " (" + user.getEmail() + ")");
         return saved;
     }
 
@@ -121,8 +122,8 @@ public class OrderService {
         Order saved = payAndSave(order, request.getPaymentReference());
 
         activityService.log("guest:" + request.getEmail(), "order_placed", Map.of("orderId", saved.getId(), "total", saved.getTotal()));
-        emailService.notifyAdminNewOrder(saved.getId(), saved.getTotal(), request.getFullName() + " (guest, " + request.getEmail() + ")");
-        emailService.sendOrderConfirmation(request.getEmail(), saved.getId(), saved.getTotal());
+        sendOrderPlacedEmails(saved, request.getEmail(), request.getFullName(),
+                request.getFullName() + " (guest, " + request.getEmail() + ")");
         return saved;
     }
 
@@ -145,6 +146,17 @@ public class OrderService {
     }
 
     private record CartLine(String productId, int quantity) {}
+
+    /** Buyer confirmation, admin alert, and one "new order" email per vendor with lines in it. */
+    private void sendOrderPlacedEmails(Order order, String buyerEmail, String buyerName, String customerDescriptor) {
+        emailService.sendOrderConfirmation(buyerEmail, buyerName, order);
+        emailService.notifyAdminNewOrder(order, customerDescriptor);
+        Map<String, List<Order.OrderLine>> linesByVendor = order.getItems().stream()
+                .filter(line -> line.getVendorId() != null)
+                .collect(Collectors.groupingBy(Order.OrderLine::getVendorId));
+        userRepository.findAllById(linesByVendor.keySet()).forEach(vendor ->
+                emailService.notifyVendorNewOrder(vendor.getEmail(), vendor.getName(), order, linesByVendor.get(vendor.getId())));
+    }
 
     /**
      * Verifies payment, takes the stock, then saves. Stock is reserved only
@@ -216,6 +228,7 @@ public class OrderService {
         }
 
         Order order = new Order();
+        order.setTrackingToken(UUID.randomUUID().toString().replace("-", ""));
         order.setStatus(OrderStatus.PROCESSING);
         order.setStatusHistory(new ArrayList<>(List.of(new Order.StatusEvent(OrderStatus.PROCESSING, Instant.now()))));
         order.setFulfillmentType(fulfillmentType);
@@ -262,6 +275,16 @@ public class OrderService {
         return order;
     }
 
+    private void notifyBuyerOfStatus(Order order) {
+        if (order.getUserId() != null) {
+            userRepository.findById(order.getUserId()).ifPresent(buyer ->
+                    emailService.sendOrderStatusUpdate(buyer.getEmail(), buyer.getName(), order));
+        } else if (order.getGuestEmail() != null) {
+            String name = order.getDeliveryAddress() != null ? order.getDeliveryAddress().getFullName() : null;
+            emailService.sendOrderStatusUpdate(order.getGuestEmail(), name, order);
+        }
+    }
+
     private Map<String, Product> loadProducts(List<String> productIds) {
         return StreamSupport
                 .stream(productRepository.findAllById(productIds).spliterator(), false)
@@ -273,6 +296,17 @@ public class OrderService {
                 .orElseThrow(() -> new ApiException("Order not found", HttpStatus.NOT_FOUND));
         if (!userId.equals(order.getUserId())) {
             throw new ApiException("Not your order", HttpStatus.FORBIDDEN);
+        }
+        return order;
+    }
+
+    public Order getOrderByTrackingToken(String orderId, String token) {
+        Order order = orderRepository.findById(orderId).orElse(null);
+        // Same 404 for "no such order" and "wrong token" so the endpoint can't
+        // be used to probe which order ids exist.
+        if (order == null || order.getTrackingToken() == null || token == null
+                || !MessageDigest.isEqual(order.getTrackingToken().getBytes(), token.getBytes())) {
+            throw new ApiException("Order not found", HttpStatus.NOT_FOUND);
         }
         return order;
     }
@@ -307,6 +341,7 @@ public class OrderService {
         Order saved = orderRepository.save(order);
 
         activityService.log(vendorUserId, "order_status_updated", Map.of("orderId", orderId, "status", newStatus.name()));
+        notifyBuyerOfStatus(saved);
         return saved;
     }
 }

@@ -172,9 +172,10 @@ export const fetchOrders = createAsyncThunk('catalog/fetchOrders', async (_, { r
   }
 })
 
-export const fetchOrder = createAsyncThunk('catalog/fetchOrder', async (id, { rejectWithValue }) => {
+// `token` comes from the emailed tracking link and lets guests (no login) view their order.
+export const fetchOrder = createAsyncThunk('catalog/fetchOrder', async ({ id, token }, { rejectWithValue }) => {
   try {
-    return await api.getOrder(id)
+    return token ? await api.trackOrder(id, token) : await api.getOrder(id)
   } catch (e) {
     return rejectWithValue(e.message)
   }

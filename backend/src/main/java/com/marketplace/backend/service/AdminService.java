@@ -28,6 +28,7 @@ public class AdminService {
     private final ProductRepository productRepository;
     private final ActivityService activityService;
     private final InventoryService inventoryService;
+    private final EmailService emailService;
 
     public AdminService(
             UserRepository userRepository,
@@ -35,7 +36,8 @@ public class AdminService {
             PlatformSettingsRepository platformSettingsRepository,
             ProductRepository productRepository,
             ActivityService activityService,
-            InventoryService inventoryService
+            InventoryService inventoryService,
+            EmailService emailService
     ) {
         this.userRepository = userRepository;
         this.activityLogRepository = activityLogRepository;
@@ -43,6 +45,7 @@ public class AdminService {
         this.productRepository = productRepository;
         this.activityService = activityService;
         this.inventoryService = inventoryService;
+        this.emailService = emailService;
     }
 
     public Map<String, Object> dashboard() {
@@ -87,6 +90,7 @@ public class AdminService {
         vendor.setUpdatedAt(Instant.now());
         userRepository.save(vendor);
         activityService.log(adminId, "vendor_approved", Map.of("vendorId", vendorUserId));
+        emailService.notifyVendorApproved(vendor.getEmail(), vendor.getName());
         return vendor;
     }
 
@@ -101,6 +105,7 @@ public class AdminService {
         vendor.setUpdatedAt(Instant.now());
         userRepository.save(vendor);
         activityService.log(adminId, "vendor_rejected", Map.of("vendorId", vendorUserId, "reason", request.getReason()));
+        emailService.notifyVendorRejected(vendor.getEmail(), vendor.getName(), request.getReason());
         return vendor;
     }
 

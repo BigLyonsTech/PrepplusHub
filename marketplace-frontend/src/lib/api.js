@@ -109,6 +109,7 @@ export const api = {
   // Orders
   getOrders: () => request('/orders'),
   getOrder: (id) => request(`/orders/${id}`),
+  trackOrder: (id, token) => request(`/orders/${id}/track?t=${encodeURIComponent(token)}`),
   getVendorOrders: () => request('/orders/vendor/mine'),
   checkout: (body) => request('/orders/checkout', { method: 'POST', body: JSON.stringify(body) }),
   guestCheckout: (body) => request('/orders/guest-checkout', { method: 'POST', body: JSON.stringify(body) }),

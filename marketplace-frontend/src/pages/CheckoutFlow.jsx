@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, MapPin, Minus, Phone, Plus, X } from 'lucide-react'
@@ -62,6 +62,7 @@ export default function CheckoutFlow() {
   const { showToast } = useToast()
   const [step, setStep] = useState(1)
   const [placed, setPlaced] = useState(false)
+  const [placedOrder, setPlacedOrder] = useState(null)
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [error, setError] = useState('')
@@ -134,6 +135,7 @@ export default function CheckoutFlow() {
     setLoading(false)
     const succeeded = isAuthenticated ? checkout.fulfilled.match(result) : guestCheckout.fulfilled.match(result)
     if (succeeded) {
+      setPlacedOrder(result.payload)
       setPlaced(true)
     } else {
       setError(result.payload || 'Checkout failed')
@@ -191,6 +193,14 @@ export default function CheckoutFlow() {
           </motion.div>
           <h1 className="font-display text-3xl font-semibold mb-2">Order placed</h1>
           <p className="text-onLight/50 mb-8">We&apos;ll email you a confirmation shortly.</p>
+          {placedOrder?.id && (
+            <Link
+              to={`/orders/${placedOrder.id}${placedOrder.trackingToken ? `?t=${placedOrder.trackingToken}` : ''}`}
+              className="text-sm font-medium text-leaf hover:underline mb-6"
+            >
+              Track this order
+            </Link>
+          )}
           <Button
             size="lg"
             onClick={() => navigate(isAuthenticated ? '/customer/dashboard' : '/products')}
